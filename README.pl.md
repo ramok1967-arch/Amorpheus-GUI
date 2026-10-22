@@ -107,8 +107,8 @@ Pliki `Init.txt` z oryginalnego Amorpheusa otwiera się przez **Plik → Otwórz
 - **Oś x:** 2θ [°] (wymaga λ) albo Q w Å⁻¹ lub nm⁻¹.
 - **Tło:** pomiar pustej komórki lub uchwytu (zalecane) albo tło zmierzone na próbce.
 
-> **Ważne:** program **nie** stosuje korekt na polaryzację, absorpcję ani rozpraszanie wielokrotne, tak jak
-> oryginał. Należy je wykonać przy integracji danych (np. w pyFAI/Dioptasie: polaryzacja ≈ 0,99 dla
+> **Ważne:** ani ten program, ani oryginalny Amorpheus **nie** wykonują korekt na polaryzację, absorpcję
+> i rozpraszanie wielokrotne. Należy je wykonać wcześniej, przy integracji danych (np. w pyFAI/Dioptasie: polaryzacja ≈ 0,99 dla
 > synchrotronu). Brak korekty polaryzacji przy dużych kątach 2θ zaniża natężenie przy wysokim Q, a wtedy
 > dopasowanie ρ i bkfactor staje się niestabilne.
 

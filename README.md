@@ -115,8 +115,8 @@ project, Ctrl+Shift+O).
 - **x axis:** 2θ [°] (requires λ) or Q in Å⁻¹ or nm⁻¹.
 - **Background:** an empty cell or holder measurement (recommended), or a background measured on the sample.
 
-> **Important:** like the original, the program does **not** correct for polarization, absorption or
-> multiple scattering. These corrections must be applied during data integration (e.g. in pyFAI/Dioptas:
+> **Important:** neither this program nor the original Amorpheus applies corrections for polarization,
+> absorption or multiple scattering. These corrections must be applied beforehand, during data integration (e.g. in pyFAI/Dioptas:
 > polarization factor ≈ 0.99 for synchrotron beams). Without a polarization correction, data at large 2θ
 > lose intensity at high Q, and the fit of ρ and bkfactor becomes unstable.
 
