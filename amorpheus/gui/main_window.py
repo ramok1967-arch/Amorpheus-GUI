@@ -15,6 +15,10 @@ from .widgets import ParamsPanel, Worker
 from .tabs import DataTab, NormTab, LoopTab, Chi2Tab, BatchTab, RPSTab
 from .opendata import OpenDataDialog, DATA_FILTER
 from .. import autodetect as ad
+from ..i18n import tr, LANG, LANGUAGES, save_language, strip_lang_args  # noqa: E402
+
+# sciezka skryptu startowego zapamietana przy imporcie (do ponownego uruchomienia po zmianie jezyka)
+_SCRIPT = os.path.abspath(sys.argv[0]) if sys.argv and sys.argv[0] else ""
 
 STYLE = """
 QWidget { font-size: 9.5pt; }
@@ -45,18 +49,18 @@ QProgressBar { border: 1px solid #b8c2cf; border-radius: 4px; text-align: center
 QProgressBar::chunk { background: #2e7d32; border-radius: 3px; }
 """
 
-ABOUT = f"""<h3>Amorpheus-Qt {__version__}</h3>
+ABOUT = tr("""<h3>Amorpheus-Qt {0}</h3>
 <p>Przepisana wersja programu <b>Amorpheus</b> do analizy rozpraszania promieniowania X
 przez materiały amorficzne i ciecze: normalizacja, S(q), F(r), g(r), dopasowanie gęstości
 i współczynnika tła metodą Kaplowa/Eggerta, pętle po r<sub>min</sub> i q<sub>max</sub>, mapa χ²,
 tryb wsadowy oraz narzędzie RPS (usuwanie pików, wygładzanie).</p>
-<p><b>Oryginał:</b> S. Boccato, Y. Garino, G. Morard, C. Sanloup (2020–2022),
+<p><b>Oryginał:</b> S. Boccato i in. (2020–2022),
 <a href="https://github.com/CelluleProjet/Amorpheus">github.com/CelluleProjet/Amorpheus</a><br>
 <b>Cytowanie:</b> Boccato i in., High Pressure Research (2022),
 <a href="https://doi.org/10.1080/08957959.2022.2032032">doi:10.1080/08957959.2022.2032032</a></p>
-<p>Licencja: GNU GPL v3 (jak oryginał).</p>"""
+<p>Licencja: GNU GPL v3 (jak oryginał).</p>""").format(__version__)
 
-CHANGES = """<h3>Zmiany względem oryginału v1.0.5</h3>
+CHANGES = tr("""<h3>Zmiany względem oryginału v1.0.5</h3>
 <ul>
 <li><b>Wyniki</b>: przy wyłączonej „poprawce jednostek” identyczne z oryginałem (test w <i>tests/</i>,
 różnice rzędu 1e-14).</li>
@@ -74,13 +78,13 @@ akceptuje przecinek dziesiętny, średnik, tab, przecinek jako separator kolumn;
 projekt &lt;dane&gt;_Init.txt tworzony i zapisywany automatycznie obok danych; obsługa Q w nm⁻¹.</li>
 <li>Poprawione drobne błędy: nagłówek pliku pętli q<sub>max</sub>, nazwy plików, wykres ρ(q<sub>max</sub>)
 zapisywany pod złym prefiksem, Erase w RPS gubiący ostatni punkt.</li>
-</ul>"""
+</ul>""")
 
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle(f"Amorpheus-Qt {__version__}")
+        self.setWindowTitle(tr('Amorpheus-Qt {0}').format(__version__))
         self.worker = None
         self.settings = QtCore.QSettings("IMIM-PAN", "Amorpheus-Qt")
 
@@ -88,7 +92,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.params.log.connect(self.log)
         self.params.open_data_requested.connect(self.open_data)
         self.setAcceptDrops(True)
-        dock = QtWidgets.QDockWidget("Parametry", self)
+        dock = QtWidgets.QDockWidget(tr("Parametry"), self)
         dock.setObjectName("params")
         dock.setWidget(self.params)
         dock.setFeatures(QtWidgets.QDockWidget.DockWidgetMovable | QtWidgets.QDockWidget.DockWidgetFloatable)
@@ -102,9 +106,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.t_chi = Chi2Tab(self)
         self.t_batch = BatchTab(self)
         self.t_rps = RPSTab(self)
-        for t, name in [(self.t_data, "Dane"), (self.t_norm, "Normalizacja"), (self.t_rmin, "Pętla r_min"),
-                        (self.t_qmax, "Pętla q_max"), (self.t_chi, "Mapa χ²"), (self.t_batch, "Batch"),
-                        (self.t_rps, "RPS – piki i wygładzanie")]:
+        for t, name in [(self.t_data, tr("Dane")), (self.t_norm, tr("Normalizacja")), (self.t_rmin, tr("Pętla r_min")),
+                        (self.t_qmax, tr("Pętla q_max")), (self.t_chi, tr("Mapa χ²")), (self.t_batch, tr("Batch")),
+                        (self.t_rps, tr("RPS – piki i wygładzanie"))]:
             self.tabs.addTab(t, name)
         self.setCentralWidget(self.tabs)
 
@@ -112,7 +116,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.logw.setObjectName("log")
         self.logw.setReadOnly(True)
         self.logw.setMaximumBlockCount(5000)
-        ld = QtWidgets.QDockWidget("Dziennik", self)
+        ld = QtWidgets.QDockWidget(tr("Dziennik"), self)
         ld.setObjectName("log")
         ld.setWidget(self.logw)
         ld.setFeatures(QtWidgets.QDockWidget.DockWidgetMovable | QtWidgets.QDockWidget.DockWidgetFloatable)
@@ -121,11 +125,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.resizeDocks([ld], [110], Qt.Vertical)
 
         sb = self.statusBar()
-        self.status = QtWidgets.QLabel("Gotowy")
+        self.status = QtWidgets.QLabel(tr("Gotowy"))
         self.pbar = QtWidgets.QProgressBar()
         self.pbar.setMaximumWidth(260)
         self.pbar.setVisible(False)
-        self.b_stop = QtWidgets.QPushButton("Stop")
+        self.b_stop = QtWidgets.QPushButton(tr("Stop"))
         self.b_stop.setObjectName("stop")
         self.b_stop.setEnabled(False)
         self.b_stop.clicked.connect(self.stop)
@@ -140,35 +144,46 @@ class MainWindow(QtWidgets.QMainWindow):
         if g is not None:
             self.restoreGeometry(g)
         self.params.loaded.connect(self._sync_tabs)
-        self.log(f"Amorpheus-Qt {__version__} – Python {sys.version.split()[0]}")
+        self.log(tr('Amorpheus-Qt {0} – Python {1}').format(__version__, sys.version.split()[0]))
 
     # ------------------------------------------------------------------------------
     def _menus(self):
-        m = self.menuBar().addMenu("&Plik")
-        a = m.addAction("Otwórz dane…", self.open_data)
+        m = self.menuBar().addMenu(tr("&Plik"))
+        a = m.addAction(tr("Otwórz dane…"), self.open_data)
         a.setShortcut("Ctrl+O")
-        a = m.addAction("Otwórz projekt (Init.txt)…", self.params.load_dialog)
+        a = m.addAction(tr("Otwórz projekt (Init.txt)…"), self.params.load_dialog)
         a.setShortcut("Ctrl+Shift+O")
-        a = m.addAction("Zapisz projekt", lambda: self.params.save_project(quiet=False))
+        a = m.addAction(tr("Zapisz projekt"), lambda: self.params.save_project(quiet=False))
         a.setShortcut("Ctrl+S")
-        m.addAction("Zapisz projekt jako…", self.params.save_dialog)
+        m.addAction(tr("Zapisz projekt jako…"), self.params.save_dialog)
         m.addSeparator()
-        m.addAction("Wczytaj przykład (szkło Ce)", self.load_example)
+        m.addAction(tr("Wczytaj przykład (szkło Ce)"), self.load_example)
         m.addSeparator()
-        m.addAction("Otwórz folder wyników", self.open_out)
+        m.addAction(tr("Otwórz folder wyników"), self.open_out)
         m.addSeparator()
-        a = m.addAction("Zakończ", self.close)
+        a = m.addAction(tr("Zakończ"), self.close)
         a.setShortcut("Ctrl+Q")
-        h = self.menuBar().addMenu("&Pomoc")
-        h.addAction("O programie", lambda: QtWidgets.QMessageBox.about(self, "O programie", ABOUT))
-        h.addAction("Zmiany względem oryginału", lambda: QtWidgets.QMessageBox.information(self, "Zmiany", CHANGES))
-        h.addAction("Pomoc – opis parametrów", self.show_help)
+        h = self.menuBar().addMenu(tr("&Pomoc"))
+        h.addAction(tr("O programie"), lambda: QtWidgets.QMessageBox.about(self, tr("O programie"), ABOUT))
+        h.addAction(tr("Zmiany względem oryginału"), lambda: QtWidgets.QMessageBox.information(self, tr("Zmiany"), CHANGES))
+        h.addAction(tr("Pomoc – opis parametrów"), self.show_help)
+
+        lm = self.menuBar().addMenu("Język / Language")
+        grp = QtWidgets.QActionGroup(self)
+        for code, name in LANGUAGES.items():
+            act = lm.addAction(name, lambda c=code: self.set_language(c))
+            act.setCheckable(True)
+            act.setChecked(code == LANG)
+            grp.addAction(act)
 
     def show_help(self):
-        p = Path(__file__).resolve().parents[2] / "README.md"
-        txt = p.read_text(encoding="utf-8") if p.exists() else "Brak README.md"
+        root = Path(__file__).resolve().parents[2]
+        p = root / ("README.pl.md" if LANG == "pl" else "README.md")
+        if not p.exists():
+            p = root / "README.md"
+        txt = p.read_text(encoding="utf-8") if p.exists() else tr("Brak README.md")
         d = QtWidgets.QDialog(self)
-        d.setWindowTitle("Pomoc")
+        d.setWindowTitle(tr("Pomoc"))
         d.resize(820, 700)
         v = QtWidgets.QVBoxLayout(d)
         t = QtWidgets.QTextBrowser()
@@ -187,7 +202,7 @@ class MainWindow(QtWidgets.QMainWindow):
             ensure_examples(log=self.log)
         except Exception as e:
             self.log(str(e).splitlines()[0])
-            QtWidgets.QMessageBox.warning(self, "Przykład", str(e))
+            QtWidgets.QMessageBox.warning(self, tr("Przykład"), str(e))
             return
         if p.exists():
             self.params.load_init(p)
@@ -199,16 +214,15 @@ class MainWindow(QtWidgets.QMainWindow):
         """Otwarcie pliku danych: istniejacy projekt obok danych albo nowy z autodetekcji."""
         if not path:
             start = self.params.base_dir or str(Path.home())
-            path, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Otwórz dane", start, DATA_FILTER)
+            path, _ = QtWidgets.QFileDialog.getOpenFileName(self, tr("Otwórz dane"), start, DATA_FILTER)
             if not path:
                 return
         path = Path(path)
         proj = ad.project_path(path)
         if proj.exists():
             r = QtWidgets.QMessageBox.question(
-                self, "Projekt istnieje",
-                f"Dla tych danych jest już zapisany projekt:\n{proj.name}\n\n"
-                "Tak – wczytaj zapisany projekt\nNie – utwórz nowy (parametry odczytane od nowa z pliku)",
+                self, tr("Projekt istnieje"),
+                tr('Dla tych danych jest już zapisany projekt:\n{0}\n\nTak – wczytaj zapisany projekt\nNie – utwórz nowy (parametry odczytane od nowa z pliku)').format(proj.name),
                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No | QtWidgets.QMessageBox.Cancel)
             if r == QtWidgets.QMessageBox.Cancel:
                 return
@@ -218,7 +232,7 @@ class MainWindow(QtWidgets.QMainWindow):
         try:
             dlg = OpenDataDialog(path, self.params.params(), self)
         except Exception as e:
-            QtWidgets.QMessageBox.critical(self, "Otwórz dane", f"Nie udało się odczytać pliku:\n{e}")
+            QtWidgets.QMessageBox.critical(self, tr("Otwórz dane"), tr('Nie udało się odczytać pliku:\n{0}').format(e))
             return
         dlg.setStyleSheet(STYLE)
         if dlg.exec_() != QtWidgets.QDialog.Accepted:
@@ -229,18 +243,18 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.params.save_project(str(proj)):
             self.params.init_path = str(proj)
             self._load_project(proj, quiet=True)
-            self.log(f"Utworzono projekt {proj.name} dla danych {path.name}")
+            self.log(tr('Utworzono projekt {0} dla danych {1}').format(proj.name, path.name))
             for w in dlg.det.warnings:
-                self.log("UWAGA: " + w)
+                self.log(tr("UWAGA: ") + w)
         else:
-            self.log("Nie udało się zapisać projektu obok danych – parametry są tylko w panelu.")
+            self.log(tr("Nie udało się zapisać projektu obok danych – parametry są tylko w panelu."))
         self.tabs.setCurrentWidget(self.t_data)
 
     def _load_project(self, proj, quiet=False):
         try:
             self.params.load_init(proj)
         except Exception as e:
-            QtWidgets.QMessageBox.critical(self, "Projekt", f"Nie udało się wczytać {proj}:\n{e}")
+            QtWidgets.QMessageBox.critical(self, tr("Projekt"), tr('Nie udało się wczytać {0}:\n{1}').format(proj, e))
             return
         self.t_data.show_data()
         self.tabs.setCurrentWidget(self.t_data)
@@ -289,19 +303,18 @@ class MainWindow(QtWidgets.QMainWindow):
         p = self.params.params()
         errs = p.validate()
         if not p.path(p.filename).is_file():
-            errs.append(f"Nie znaleziono pliku danych: {p.path(p.filename)}")
+            errs.append(tr('Nie znaleziono pliku danych: {0}').format(p.path(p.filename)))
         if p.has_bkg and not p.path(p.filename_bkg).is_file():
-            errs.append(f"Nie znaleziono pliku tła: {p.path(p.filename_bkg)}")
+            errs.append(tr('Nie znaleziono pliku tła: {0}').format(p.path(p.filename_bkg)))
         if errs:
-            QtWidgets.QMessageBox.warning(self, "Parametry", "\n".join(errs))
+            QtWidgets.QMessageBox.warning(self, tr("Parametry"), "\n".join(errs))
             return None
         self.params._files_changed()
         rng = self.params.file_range
         if rng and (p.qmin < rng[0] - 1e-9 or p.qmax > rng[1] + 1e-9):
             r = QtWidgets.QMessageBox.question(
-                self, "Zakres q",
-                f"Zakres q_min–q_max ({p.qmin:g}–{p.qmax:g} nm⁻¹) wychodzi poza dane "
-                f"({rng[0]:.3f}–{rng[1]:.3f} nm⁻¹).\nPrzyciąć do zakresu danych?")
+                self, tr("Zakres q"),
+                tr('Zakres q_min–q_max ({0:g}–{1:g} nm⁻¹) wychodzi poza dane ({2:.3f}–{3:.3f} nm⁻¹).\nPrzyciąć do zakresu danych?').format(p.qmin, p.qmax, rng[0], rng[1]))
             if r != QtWidgets.QMessageBox.Yes:
                 return None
             self.params.s_qmin.setValue(max(p.qmin, rng[0] + 1e-6))
@@ -312,7 +325,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def run_task(self, fn, on_done, label, on_partial=None):
         if self.worker is not None and self.worker.isRunning():
-            QtWidgets.QMessageBox.information(self, "Zajęty", "Trwają obliczenia – poczekaj lub naciśnij Stop.")
+            QtWidgets.QMessageBox.information(self, tr("Zajęty"), tr("Trwają obliczenia – poczekaj lub naciśnij Stop."))
             return
         w = Worker(fn, self)
         self.worker = w
@@ -324,13 +337,13 @@ class MainWindow(QtWidgets.QMainWindow):
 
         def ok(res):
             self._busy(False)
-            self.status.setText(f"{label}: gotowe ({time.time() - t0:.1f} s)")
+            self.status.setText(tr('{0}: gotowe ({1:.1f} s)').format(label, time.time() - t0))
             on_done(res)
 
         def bad(msg):
             self._busy(False)
-            self.status.setText(f"{label}: błąd")
-            self.log(f"BŁĄD ({label}): {msg.splitlines()[0]}")
+            self.status.setText(tr('{0}: błąd').format(label))
+            self.log(tr('BŁĄD ({0}): {1}').format(label, msg.splitlines()[0]))
             box = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Critical, label, msg.split("\n\n")[0], parent=self)
             box.setDetailedText(msg)
             box.exec_()
@@ -363,8 +376,24 @@ class MainWindow(QtWidgets.QMainWindow):
     def stop(self):
         if self.worker is not None:
             self.worker.ctx.cancel()
-            self.status.setText("Przerywanie… (kończę bieżący krok)")
-            self.log("Przerwano przez użytkownika – wyniki częściowe zostaną zachowane.")
+            self.status.setText(tr("Przerywanie… (kończę bieżący krok)"))
+            self.log(tr("Przerwano przez użytkownika – wyniki częściowe zostaną zachowane."))
+
+    def set_language(self, code):
+        if code == LANG:
+            return
+        save_language(code)
+        # komunikat w JEZYKU DOCELOWYM (uzytkownik moze nie znac biezacego)
+        if code == "en":
+            title, msg = "Language", ("The interface language will change to English after restarting the program.\n\n"
+                                      "Restart now? The current project will be saved.")
+        else:
+            title, msg = "Język", ("Język interfejsu zmieni się na polski po ponownym uruchomieniu programu.\n\n"
+                                   "Uruchomić ponownie teraz? Bieżący projekt zostanie zapisany.")
+        r = QtWidgets.QMessageBox.question(self, title, msg)
+        if r == QtWidgets.QMessageBox.Yes:
+            self._restart = True
+            self.close()
 
     def closeEvent(self, ev):
         if self.worker is not None and self.worker.isRunning():
@@ -375,6 +404,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.settings.setValue("last_init", self.params.init_path)
         self.settings.setValue("out_dir", self.params.f_out.text())
         super().closeEvent(ev)
+        if getattr(self, "_restart", False):
+            # nowy proces bez --lang i bez pliku z wiersza polecen: jezyk z ustawien, projekt = ostatni
+            args = [_SCRIPT] if _SCRIPT.endswith(".py") else []
+            QtCore.QProcess.startDetached(sys.executable, args)
 
     def restore_last(self):
         last = self.settings.value("last_init", "")
@@ -382,7 +415,7 @@ class MainWindow(QtWidgets.QMainWindow):
             try:
                 self.params.load_init(last)
             except Exception as e:
-                self.log(f"Nie wczytano ostatniego Init: {e}")
+                self.log(tr('Nie wczytano ostatniego Init: {0}').format(e))
         else:
             self.load_example()
         od = self.settings.value("out_dir", "")
@@ -391,7 +424,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
 def main(argv=None):
-    argv = argv if argv is not None else sys.argv
+    argv = strip_lang_args(argv if argv is not None else sys.argv)
     if hasattr(Qt, "AA_EnableHighDpiScaling"):
         QtWidgets.QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
     if hasattr(Qt, "AA_UseHighDpiPixmaps"):

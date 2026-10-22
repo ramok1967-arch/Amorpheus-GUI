@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import urllib.request
 from pathlib import Path
+from .i18n import tr  # noqa: E402
 
 RAW = "https://raw.githubusercontent.com/CelluleProjet/Amorpheus/main/Amorpheus/"
 FILES = ["Cerium.dat", "background.xy"]
@@ -19,13 +20,12 @@ def ensure_examples(folder: Path = EXAMPLES, log=print) -> Path:
         if target.exists() and target.stat().st_size > 1000:
             continue
         url = RAW + name
-        log(f"Pobieranie danych przykładowych: {url}")
+        log(tr('Pobieranie danych przykładowych: {0}').format(url))
         try:
             with urllib.request.urlopen(url, timeout=30) as r:
                 data = r.read()
         except Exception as e:
             raise RuntimeError(
-                f"Nie udało się pobrać {url}\n({e})\n\nPobierz ręcznie pliki {', '.join(FILES)} z "
-                f"https://github.com/CelluleProjet/Amorpheus/tree/main/Amorpheus do folderu {folder}") from e
+                tr('Nie udało się pobrać {0}\n({1})\n\nPobierz ręcznie pliki {2} z https://github.com/CelluleProjet/Amorpheus/tree/main/Amorpheus do folderu {3}').format(url, e, ', '.join(FILES), folder)) from e
         target.write_bytes(data)
     return folder

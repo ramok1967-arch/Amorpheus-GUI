@@ -15,6 +15,7 @@ Model postepowania jak w oryginale:
 from __future__ import annotations
 
 import numpy as np
+from .i18n import tr  # noqa: E402
 
 MODELS = ["Lorentz", "Gauss", "Voigt", "Erase", "Replace"]
 
@@ -65,13 +66,13 @@ class RPSSession:
         from lmfit.models import LorentzianModel, GaussianModel, VoigtModel, LinearModel, PolynomialModel
         xz, yz = self.zoom()
         if len(xz) < 5:
-            raise ValueError("Za mało punktów w zakresie (min. 5).")
+            raise ValueError(tr("Za mało punktów w zakresie (min. 5)."))
         if model == "Replace":
             return self._replace()
         if model == "Erase":
             self.y_tmp = self.y_sub.copy()
             self.fit_x = self.fit_y = None
-            self.report = "Erase: kliknij 'Zatwierdź', aby usunąć punkty z zakresu."
+            self.report = tr("Erase: kliknij 'Zatwierdź', aby usunąć punkty z zakresu.")
             return self.report
         slope = (yz[0] - yz[-1]) / (xz[0] - xz[-1])
         intercept = yz[0] - slope * xz[0]
@@ -120,7 +121,7 @@ class RPSSession:
         res[m] = y0 + (y1 - y0) * (self.x[m] - x0) / (x1 - x0)
         self.y_tmp = res
         self.fit_x, self.fit_y = self.x[m], res[m]
-        self.report = f"Replace: odcinek prostej {x0:.4g} – {x1:.4g}"
+        self.report = tr("Replace: odcinek prostej {0:.4g} – {1:.4g}").format(x0, x1)
         self._pending = f"Replace [{x0:.4g}, {x1:.4g}]"
         return self.report
 
@@ -128,7 +129,7 @@ class RPSSession:
         if model == "Erase":
             m = self.mask()
             if m.all():
-                raise ValueError("Nie można usunąć wszystkich punktów.")
+                raise ValueError(tr("Nie można usunąć wszystkich punktów."))
             self.x, self.y_raw, self.y_sub = self.x[~m], self.y_raw[~m], self.y_sub[~m]
             self.y_tmp = self.y_sub.copy()
             self.history.append(f"Erase [{self.xmin:.4g}, {self.xmax:.4g}]")

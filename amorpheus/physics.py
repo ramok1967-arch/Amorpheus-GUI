@@ -18,6 +18,7 @@ import numpy as np
 from scipy import stats
 from scipy.optimize import curve_fit
 from scipy.signal import find_peaks
+from .i18n import tr  # noqa: E402
 
 # numpy >= 2.0 ma trapezoid, starsze tylko trapz
 trapz = getattr(np, "trapezoid", None) or np.trapz
@@ -42,7 +43,7 @@ def atomic_number(symbol: str) -> int:
     import xraylib as xr
     z = xr.SymbolToAtomicNumber(symbol.strip())
     if z <= 0:
-        raise ValueError(f"Nieznany pierwiastek: '{symbol}'")
+        raise ValueError(tr("Nieznany pierwiastek: '{0}'").format(symbol))
     return int(z)
 
 

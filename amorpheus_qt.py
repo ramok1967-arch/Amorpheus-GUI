@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Uruchomienie: python amorpheus_qt.py [Init.txt]"""
+"""Uruchomienie: python amorpheus_qt.py [plik_danych | Init.txt] [--lang pl|en]"""
 import os
 import sys
 

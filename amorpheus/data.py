@@ -17,12 +17,13 @@ import numpy as np
 from scipy.interpolate import Akima1DInterpolator
 
 from . import physics as ph
+from .i18n import tr  # noqa: E402
 
 FILE_FORMATS = {
-    1: "2θ, bez tła",
-    2: "2θ + tło",
-    3: "Q, bez tła",
-    4: "Q + tło",
+    1: tr("2θ, bez tła"),
+    2: tr("2θ + tło"),
+    3: tr("Q, bez tła"),
+    4: tr("Q + tło"),
 }
 N_POINTS = 2500  # liczba punktow siatki (jak w oryginale)
 
@@ -124,25 +125,25 @@ class Params:
         """Lista problemow (pusta = OK)."""
         err = []
         if self.file_format not in FILE_FORMATS:
-            err.append("Format pliku musi byc 1-4.")
+            err.append(tr("Format pliku musi byc 1-4."))
         if self.qmin <= 0 or self.qmax <= self.qmin:
-            err.append("Wymagane 0 < qmin < qmax.")
+            err.append(tr("Wymagane 0 < qmin < qmax."))
         if not (0 < self.rmin <= ph.FIT_R_MAX):
-            err.append(f"rmin musi byc w zakresie (0, {ph.FIT_R_MAX}] nm.")
+            err.append(tr('rmin musi byc w zakresie (0, {0}] nm.').format(ph.FIT_R_MAX))
         if self.rho <= 0:
-            err.append("Gestosc musi byc dodatnia.")
+            err.append(tr("Gestosc musi byc dodatnia."))
         el, c = self.active_composition()
         if not el:
-            err.append("Podaj sklad (co najmniej jeden pierwiastek).")
+            err.append(tr("Podaj sklad (co najmniej jeden pierwiastek)."))
         elif abs(c.sum() - 1) > 1e-4:
-            err.append(f"Suma udzialow = {c.sum():.4f}, a powinna byc 1.")
+            err.append(tr('Suma udzialow = {0:.4f}, a powinna byc 1.').format(c.sum()))
         if self.is_theta and self.lambd <= 0:
-            err.append("Dla danych w 2θ podaj dlugosc fali λ > 0.")
+            err.append(tr("Dla danych w 2θ podaj dlugosc fali λ > 0."))
         for e in el:
             try:
                 ph.atomic_number(e)
             except Exception:
-                err.append(f"Nieznany pierwiastek: {e}")
+                err.append(tr('Nieznany pierwiastek: {0}').format(e))
         return err
 
 
@@ -253,7 +254,7 @@ def read_xy(path, trim_zeros: bool = True) -> np.ndarray:
                 continue
             rows.append((x, y))
     if len(rows) < 4:
-        raise ValueError(f"Plik {path}: za malo wierszy z danymi liczbowymi ({len(rows)}).")
+        raise ValueError(tr('Plik {0}: za malo wierszy z danymi liczbowymi ({1}).').format(path, len(rows)))
     a = np.array(rows, dtype=float)
     a = a[np.argsort(a[:, 0], kind="stable")]
     keep = np.concatenate(([True], np.diff(a[:, 0]) > 0))
@@ -322,8 +323,7 @@ class Dataset:
 
 def _akima(x, y, xn, what):
     if xn[0] < x[0] - 1e-9 or xn[-1] > x[-1] + 1e-9:
-        raise ValueError(f"{what}: zadany zakres wychodzi poza dane w pliku "
-                         f"({x[0]:.4g} - {x[-1]:.4g}).")
+        raise ValueError(tr('{0}: zadany zakres wychodzi poza dane w pliku ({1:.4g} - {2:.4g}).').format(what, x[0], x[-1]))
     xn = np.clip(xn, x[0], x[-1])
     return Akima1DInterpolator(x, y)(xn)
 
@@ -339,11 +339,11 @@ def prepare(p: Params, qmax: Optional[float] = None, qmin: Optional[float] = Non
     if p.is_theta:
         s_lo, s_hi = qmin * p.lambd / 4 / np.pi, qmax * p.lambd / 4 / np.pi
         if s_hi >= 1:
-            raise ValueError("qmax niedostepne dla tej dlugosci fali (q·λ/4π ≥ 1).")
+            raise ValueError(tr("qmax niedostepne dla tej dlugosci fali (q·λ/4π ≥ 1)."))
         thmin, thmax = np.arcsin(s_lo) * 360 / np.pi, np.arcsin(s_hi) * 360 / np.pi
         th = np.linspace(thmin, thmax, N_POINTS)
-        Imeas = _akima(d[:, 0], d[:, 1], th, "Dane")
-        Ibkg = _akima(b[:, 0], b[:, 1], th, "Tlo") if b is not None else None
+        Imeas = _akima(d[:, 0], d[:, 1], th, tr("Dane"))
+        Ibkg = _akima(b[:, 0], b[:, 1], th, tr("Tło")) if b is not None else None
         if p.qstep == 0:
             q = 4 * np.pi * np.sin(np.pi / 180 * th / 2) / p.lambd
         else:   # przyblizenie stalego kroku dq (opcja diagnostyczna z oryginalu)
@@ -354,8 +354,8 @@ def prepare(p: Params, qmax: Optional[float] = None, qmin: Optional[float] = Non
     else:
         q = np.linspace(qmin, qmax, N_POINTS)
         k = p.q_factor
-        Imeas = _akima(d[:, 0] * k, d[:, 1], q, "Dane")
-        Ibkg = _akima(b[:, 0] * k, b[:, 1], q, "Tlo") if b is not None else None
+        Imeas = _akima(d[:, 0] * k, d[:, 1], q, tr("Dane"))
+        Ibkg = _akima(b[:, 0] * k, b[:, 1], q, tr("Tło")) if b is not None else None
     incoh, f2, fm2 = ph.scattering_factors(q, el, ratio, p.incoherent)
     return Dataset(q=q, Imeas=Imeas, Ibkg=Ibkg, incoh=incoh, f2=f2, fm2=fm2, th=th)
 

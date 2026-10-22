@@ -13,38 +13,39 @@ from .. import autodetect as ad
 from .. import physics as ph
 from ..data import Params, read_xy
 from .widgets import dspin
+from ..i18n import tr  # noqa: E402
 
-DATA_FILTER = "Dane (*.xy *.dat *.txt *.chi *.csv *.xye);;Wszystkie (*)"
-UNITS = [("Q w Å⁻¹", "q_A"), ("Q w nm⁻¹", "q_nm"), ("2θ w stopniach", "2th_deg")]
+DATA_FILTER = tr("Dane (*.xy *.dat *.txt *.chi *.csv *.xye);;Wszystkie (*)")
+UNITS = [(tr("Q w Å⁻¹"), "q_A"), (tr("Q w nm⁻¹"), "q_nm"), (tr("2θ w stopniach"), "2th_deg")]
 N_EL = 6
 
 
 class OpenDataDialog(QtWidgets.QDialog):
     def __init__(self, data_path, base: Params = None, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Nowa analiza – parametry z pliku danych")
+        self.setWindowTitle(tr("Nowa analiza – parametry z pliku danych"))
         self.resize(760, 720)
         self.data_path = Path(data_path)
         self.base = base or Params()
         v = QtWidgets.QVBoxLayout(self)
 
         # --- pliki ---------------------------------------------------------------
-        g = QtWidgets.QGroupBox("Pliki")
+        g = QtWidgets.QGroupBox(tr("Pliki"))
         f = QtWidgets.QFormLayout(g)
         self.lbl_data = QtWidgets.QLabel(str(self.data_path))
         self.lbl_data.setWordWrap(True)
         self.lbl_data.setTextInteractionFlags(Qt.TextSelectableByMouse)
-        f.addRow("Dane", self.lbl_data)
+        f.addRow(tr("Dane"), self.lbl_data)
         hb = QtWidgets.QHBoxLayout()
         self.c_bkg = QtWidgets.QComboBox()
-        self.c_bkg.addItem("(brak tła)", "")
+        self.c_bkg.addItem(tr("(brak tła)"), "")
         for b in ad.suggest_background(self.data_path):
             self.c_bkg.addItem(b.name, str(b))
-        b_bkg = QtWidgets.QPushButton("Wybierz…")
+        b_bkg = QtWidgets.QPushButton(tr("Wybierz…"))
         b_bkg.clicked.connect(self.pick_bkg)
         hb.addWidget(self.c_bkg, 1)
         hb.addWidget(b_bkg)
-        f.addRow("Tło (pusta komórka)", hb)
+        f.addRow(tr("Tło (pusta komórka)"), hb)
         self.lbl_bkghint = QtWidgets.QLabel("")
         self.lbl_bkghint.setObjectName("hint")
         self.lbl_bkghint.setWordWrap(True)
@@ -59,7 +60,7 @@ class OpenDataDialog(QtWidgets.QDialog):
         v.addWidget(self.info)
 
         # --- parametry -----------------------------------------------------------
-        g = QtWidgets.QGroupBox("Parametry (można poprawić)")
+        g = QtWidgets.QGroupBox(tr("Parametry (można poprawić)"))
         grid = QtWidgets.QGridLayout(g)
         self.c_unit = QtWidgets.QComboBox()
         for t, u in UNITS:
@@ -69,10 +70,10 @@ class OpenDataDialog(QtWidgets.QDialog):
         self.s_qmax = dspin(0.01, 1000, 2, 1, 78, "nm⁻¹")
         self.s_rmin = dspin(0.01, ph.FIT_R_MAX, 3, 0.005, 0.2, "nm")
         self.c_inc = QtWidgets.QComboBox()
-        self.c_inc.addItem("1: tło z pustej komórki", 1)
-        self.c_inc.addItem("0: tło zmierzone na próbce", 0)
-        rows = [("Oś x w pliku", self.c_unit), ("λ", self.s_lam), ("q_min", self.s_qmin), ("q_max", self.s_qmax),
-                ("r_min (start)", self.s_rmin), ("incoherent", self.c_inc)]
+        self.c_inc.addItem(tr("1: tło z pustej komórki"), 1)
+        self.c_inc.addItem(tr("0: tło zmierzone na próbce"), 0)
+        rows = [(tr("Oś x w pliku"), self.c_unit), ("λ", self.s_lam), (tr("q_min"), self.s_qmin), (tr("q_max"), self.s_qmax),
+                (tr("r_min (start)"), self.s_rmin), (tr("incoherent"), self.c_inc)]
         for k, (lab, w) in enumerate(rows):
             grid.addWidget(QtWidgets.QLabel(lab), k % 3, 2 * (k // 3))
             grid.addWidget(w, k % 3, 2 * (k // 3) + 1)
@@ -84,11 +85,11 @@ class OpenDataDialog(QtWidgets.QDialog):
         self.s_lam.valueChanged.connect(self._user_lam)
 
         # --- sklad i gestosc -----------------------------------------------------
-        g = QtWidgets.QGroupBox("Skład i gęstość")
+        g = QtWidgets.QGroupBox(tr("Skład i gęstość"))
         h = QtWidgets.QHBoxLayout(g)
         left = QtWidgets.QVBoxLayout()
         self.t = QtWidgets.QTableWidget(N_EL, 2)
-        self.t.setHorizontalHeaderLabels(["Pierwiastek", "Udział at."])
+        self.t.setHorizontalHeaderLabels([tr("Pierwiastek"), tr("Udział at.")])
         self.t.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
         vh = self.t.verticalHeader()
         vh.setSectionResizeMode(QtWidgets.QHeaderView.Fixed)
@@ -103,21 +104,21 @@ class OpenDataDialog(QtWidgets.QDialog):
         h.addLayout(left, 1)
         right = QtWidgets.QFormLayout()
         self.s_dens = dspin(0, 30, 3, 0.05, 0.0, "g/cm³")
-        self.s_dens.setSpecialValueText("nieznana")
+        self.s_dens.setSpecialValueText(tr("nieznana"))
         self.s_dens.valueChanged.connect(self._update_rho)
         self.s_rho = dspin(1, 500, 3, 0.5, 50.0, "at/nm³")
         self.lbl_rho = QtWidgets.QLabel("")
         self.lbl_rho.setObjectName("hint")
         self.lbl_rho.setWordWrap(True)
-        right.addRow("Gęstość masowa", self.s_dens)
-        right.addRow("ρ startowe", self.s_rho)
+        right.addRow(tr("Gęstość masowa"), self.s_dens)
+        right.addRow(tr("ρ startowe"), self.s_rho)
         right.addRow("", self.lbl_rho)
         h.addLayout(right, 1)
         v.addWidget(g)
 
         bb = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
-        bb.button(QtWidgets.QDialogButtonBox.Ok).setText("Utwórz projekt")
-        bb.button(QtWidgets.QDialogButtonBox.Cancel).setText("Anuluj")
+        bb.button(QtWidgets.QDialogButtonBox.Ok).setText(tr("Utwórz projekt"))
+        bb.button(QtWidgets.QDialogButtonBox.Cancel).setText(tr("Anuluj"))
         bb.accepted.connect(self._accept)
         bb.rejected.connect(self.reject)
         v.addWidget(bb)
@@ -135,7 +136,7 @@ class OpenDataDialog(QtWidgets.QDialog):
 
     # ------------------------------------------------------------------------------
     def pick_bkg(self):
-        f, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Plik tła", str(self.data_path.parent), DATA_FILTER)
+        f, _ = QtWidgets.QFileDialog.getOpenFileName(self, tr("Plik tła"), str(self.data_path.parent), DATA_FILTER)
         if f:
             i = self.c_bkg.findData(f)
             if i < 0:
@@ -161,7 +162,7 @@ class OpenDataDialog(QtWidgets.QDialog):
             p, det = ad.build_params(self.data_path, self.bkg(), self.base,
                                      unit=self._forced_unit, lambd_nm=self._forced_lam)
         except Exception as e:
-            self.info.setText(f"<b style='color:#c62828'>Nie udało się odczytać pliku:</b> {e}")
+            self.info.setText(tr("<b style='color:#c62828'>Nie udało się odczytać pliku:</b> {0}").format(e))
             return
         self.p0, self.det = p, det
         unit = det.unit if det.unit in dict((u, u) for _, u in UNITS) else "q_A"
@@ -184,27 +185,24 @@ class OpenDataDialog(QtWidgets.QDialog):
                 self.t.setItem(r, 0, QtWidgets.QTableWidgetItem(e))
                 self.t.setItem(r, 1, QtWidgets.QTableWidgetItem(f"{c:g}" if e else ""))
             self.t.blockSignals(False)
-            self.lbl_comp.setText("Skład odczytany z nazwy pliku." if any(p.elements) else
-                                  "Nie odczytano składu z nazwy – wpisz pierwiastki i udziały atomowe.")
+            self.lbl_comp.setText(tr("Skład odczytany z nazwy pliku.") if any(p.elements) else
+                                  tr("Nie odczytano składu z nazwy – wpisz pierwiastki i udziały atomowe."))
             self._update_rho()
         self.lbl_bkghint.setText("" if self.bkg() else
-                                 "Bez tła: format bez odejmowania tła, dopasowywana jest tylko ρ. "
-                                 "Rozpraszanie od komórki/kapilary/powietrza zostaje w S(q).")
+                                 tr("Bez tła: format bez odejmowania tła, dopasowywana jest tylko ρ. "
+                                 "Rozpraszanie od komórki/kapilary/powietrza zostaje w S(q)."))
         self._show_info()
 
     def _show_info(self):
         det = self.det
-        unit_txt = {"q_A": "Q [Å⁻¹]", "q_nm": "Q [nm⁻¹]", "2th_deg": "2θ [°]", "2th_rad": "2θ [rad]"}.get(det.unit, "?")
-        lines = [f"<b>Wykryto:</b> {det.source or 'plik tekstowy'}, oś: {unit_txt}, "
-                 f"{det.n_points} punktów, x = {det.x_lo:.4g} – {det.x_hi:.4g}"]
+        unit_txt = {"q_A": "Q [Å⁻¹]", "q_nm": tr("Q [nm⁻¹]"), "2th_deg": "2θ [°]", "2th_rad": tr("2θ [rad]")}.get(det.unit, "?")
+        lines = [tr('<b>Wykryto:</b> {0}, oś: {1}, {2} punktów, x = {3:.4g} – {4:.4g}').format(det.source or tr('plik tekstowy'), unit_txt, det.n_points, det.x_lo, det.x_hi)]
         if det.wavelength_nm:
-            lines.append(f"λ = {det.wavelength_nm:.6g} nm ({det.wavelength_nm * 10:.5g} Å, "
-                         f"{12.39842 / (det.wavelength_nm * 10):.2f} keV)")
+            lines.append(tr('λ = {0:.6g} nm ({1:.5g} Å, {2:.2f} keV)').format(det.wavelength_nm, det.wavelength_nm * 10, 12.39842 / (det.wavelength_nm * 10)))
         if np.isfinite(det.main_peak):
-            lines.append(f"Pierwsze maksimum przy q ≈ {det.main_peak:.1f} nm⁻¹ → q_min ustawione poniżej, "
-                         f"q_max przed końcem danych.")
+            lines.append(tr('Pierwsze maksimum przy q ≈ {0:.1f} nm⁻¹ → q_min ustawione poniżej, q_max przed końcem danych.').format(det.main_peak))
         for w in det.warnings:
-            lines.append(f"<span style='color:#b45309'>⚠ {w}</span>")
+            lines.append(tr("<span style='color:#b45309'>⚠ {0}</span>").format(w))
         self.info.setText("<br>".join(lines))
 
     def _unit_changed(self):
@@ -233,13 +231,13 @@ class OpenDataDialog(QtWidgets.QDialog):
             m = ad.mean_atomic_mass([e for e, _ in act], [x / s for _, x in act]) if act and s > 0 else np.nan
         except Exception:
             m = np.nan
-        txt = f"suma udziałów = {s:.4f}" + (" ✓" if abs(s - 1) < 1e-4 else " ✗ (zostanie znormalizowana)")
+        txt = tr('suma udziałów = {0:.4f}').format(s) + (" ✓" if abs(s - 1) < 1e-4 else tr(" ✗ (zostanie znormalizowana)"))
         if np.isfinite(m):
             txt += f"; M̄ = {m:.2f} g/mol"
             if self.s_dens.value() > 0:
                 rho = ad.AVOGADRO_NM * self.s_dens.value() / m
                 self.s_rho.setValue(rho)
-                txt += f"<br>ρ = 602,2·d/M̄ = <b>{rho:.2f} at/nm³</b>"
+                txt += tr("<br>ρ = 602,2·d/M̄ = <b>{0:.2f} at/nm³</b>").format(rho)
         self.lbl_rho.setText(txt)
 
     # ------------------------------------------------------------------------------
@@ -247,9 +245,9 @@ class OpenDataDialog(QtWidgets.QDialog):
         p = self.result_params()
         errs = p.validate()
         if p.qmin >= p.qmax:
-            errs.append("q_min musi być mniejsze od q_max.")
+            errs.append(tr("q_min musi być mniejsze od q_max."))
         if errs:
-            QtWidgets.QMessageBox.warning(self, "Parametry", "\n".join(errs))
+            QtWidgets.QMessageBox.warning(self, tr("Parametry"), "\n".join(errs))
             return
         self.accept()
 

@@ -7,6 +7,7 @@ from matplotlib import cm
 from matplotlib.figure import Figure
 
 from .data import tth_to_q, q_to_tth, read_xy
+from .i18n import tr  # noqa: E402
 
 C_DATA = "#1f4e79"
 C_BKG = "#c55a11"
@@ -47,7 +48,7 @@ def plot_iterations(ax, x, Y, xlabel, ylabel, title="", lw_last=2.0):
     for i, y in enumerate(Y):
         last = i == len(Y) - 1
         ax.plot(x, y, color=cols[i], lw=lw_last if last else 0.9, alpha=1 if last else 0.75,
-                label=f"iter. {i}")
+                label=tr('iter. {0}').format(i))
     style_ax(ax, xlabel, ylabel, title)
     ax.legend(fontsize=7, ncol=2)
 
@@ -68,13 +69,13 @@ def plot_raw(fig: Figure, p):
         hi = q_to_tth(min(p.qmax, 4 * np.pi / p.lambd * 0.999), p.lambd)
     else:
         k = p.q_factor
-        xl = "q (Å⁻¹)" if k == 10 else "q (nm⁻¹)"
+        xl = "q (Å⁻¹)" if k == 10 else tr("q (nm⁻¹)")
         fwd = (lambda x: x * k, lambda q: q / k)
         lo, hi = p.qmin / k, p.qmax / k
-    ax.axvspan(lo, hi, color="#ffd54f", alpha=0.18, label="zakres analizy")
-    style_ax(ax, xl, "I (j.u.)", "Dane z pliku")
+    ax.axvspan(lo, hi, color="#ffd54f", alpha=0.18, label=tr("zakres analizy"))
+    style_ax(ax, xl, tr("I (j.u.)"), tr("Dane z pliku"))
     sec = ax.secondary_xaxis("top", functions=fwd)
-    sec.set_xlabel("q (nm⁻¹)")
+    sec.set_xlabel(tr("q (nm⁻¹)"))
     sec.tick_params(labelsize=8)
     ax.legend(fontsize=8)
     finish(fig)
@@ -82,12 +83,12 @@ def plot_raw(fig: Figure, p):
 
 def plot_intensity(ax, res):
     if res.Ibkg is not None:
-        ax.plot(res.q_data, res.Imeas, color=C_DATA, lw=1, label="I$^{meas}$")
-        ax.plot(res.q_data, res.Ibkg, color=C_BKG, lw=1, label="I$^{bkg}$")
-        ax.plot(res.q_data, res.Isa, color=C_SAMPLE, lw=1.4, label=f"I$^{{sample}}$ (bk={res.bkfactor:.4f})")
+        ax.plot(res.q_data, res.Imeas, color=C_DATA, lw=1, label=tr("I$^{meas}$"))
+        ax.plot(res.q_data, res.Ibkg, color=C_BKG, lw=1, label=tr("I$^{bkg}$"))
+        ax.plot(res.q_data, res.Isa, color=C_SAMPLE, lw=1.4, label=tr('I$^{{sample}}$ (bk={0:.4f})').format(res.bkfactor))
     else:
-        ax.plot(res.q_data, res.Isa, color=C_SAMPLE, lw=1.4, label="I$^{sample}$")
-    style_ax(ax, "q (nm⁻¹)", "I (j.u.)", "Intensywność")
+        ax.plot(res.q_data, res.Isa, color=C_SAMPLE, lw=1.4, label=tr("I$^{sample}$"))
+    style_ax(ax, tr("q (nm⁻¹)"), tr("I (j.u.)"), tr("Intensywność"))
     ax.legend(fontsize=7)
 
 
@@ -95,14 +96,14 @@ def plot_norm_overview(fig: Figure, res):
     fig.clear()
     axs = fig.subplots(2, 2)
     plot_intensity(axs[0, 0], res)
-    plot_iterations(axs[0, 1], res.q, res.S, "q (nm⁻¹)", "S(q)", "Czynnik struktury S(q)")
+    plot_iterations(axs[0, 1], res.q, res.S, tr("q (nm⁻¹)"), "S(q)", tr("Czynnik struktury S(q)"))
     axs[0, 1].axvline(res.q_data[0], color="gray", ls=":", lw=1)
-    plot_iterations(axs[1, 0], res.R, res.F, "r (nm)", "F(r)", "F(r)")
+    plot_iterations(axs[1, 0], res.R, res.F, tr("r (nm)"), "F(r)", "F(r)")
     axs[1, 0].plot(res.R, -4 * np.pi * res.rho * res.R, color="gray", ls="--", lw=1, label="−4πρr")
     axs[1, 0].axvline(res.p.rmin, color=C_FIT, ls=":", lw=1)
     lo = min(np.nanmin(res.F[-1]), -4 * np.pi * res.rho * res.p.rmin * 1.3)
     axs[1, 0].set_ylim(lo * 1.1, np.nanmax(res.F[-1]) * 1.15)
-    plot_iterations(axs[1, 1], res.R, res.g, "r (nm)", "g(r)", "g(r)")
+    plot_iterations(axs[1, 1], res.R, res.g, tr("r (nm)"), "g(r)", "g(r)")
     if res.g_mod is not None:
         axs[1, 1].plot(res.R, res.g_mod, color=C_MOD, lw=1.6,
                        label=f"z M(Q,Δ(r)): a={res.mod_a:.3f}, b={res.mod_b:.3f}")
@@ -128,8 +129,8 @@ def plot_modification(fig: Figure, res):
         ax.plot(res.R, res.g_mod, color=C_MOD, lw=1.6, label="g(r) z M(Q,Δ(r))")
         k = np.nanmax(res.g[-1]) / np.nanmax(res.dR)
         ax.plot(res.R, k * res.dR, "--", color=C_BKG, lw=1,
-                label=f"Δ(r)·{k:.1f}: a={res.mod_a:.3f} nm, b={res.mod_b:.3f} nm")
-    style_ax(ax, "r (nm)", "g(r)", "Funkcja modyfikująca")
+                label=tr('Δ(r)·{0:.1f}: a={1:.3f} nm, b={2:.3f} nm').format(k, res.mod_a, res.mod_b))
+    style_ax(ax, tr("r (nm)"), "g(r)", tr("Funkcja modyfikująca"))
     ax.legend(fontsize=8)
     finish(fig)
 
@@ -143,9 +144,9 @@ def plot_loop(fig: Figure, results, kind="rmin", has_bkg=True, highlight=None):
     rho = np.array([r.rho for r in results])
     bk = np.array([r.bkfactor for r in results])
     chi = np.array([r.chi2 for r in results])
-    xl = "r_min (nm)" if kind == "rmin" else "q_max (nm⁻¹)"
+    xl = tr("r_min (nm)") if kind == "rmin" else tr("q_max (nm⁻¹)")
     axs = fig.subplots(2 if has_bkg else 1, 1, sharex=True, squeeze=False)[:, 0]
-    pairs = [(rho, "ρ (at/nm³)", C_DATA)] + ([(bk, "bkfactor", C_BKG)] if has_bkg else [])
+    pairs = [(rho, tr("ρ (at/nm³)"), C_DATA)] + ([(bk, tr("bkfactor"), C_BKG)] if has_bkg else [])
     for ax, (y, lab, col) in zip(axs, pairs):
         ax.plot(x, y, "o-", color=col, ms=4)
         ax.set_ylabel(lab, color=col)
@@ -160,7 +161,7 @@ def plot_loop(fig: Figure, results, kind="rmin", has_bkg=True, highlight=None):
         if highlight is not None and 0 <= highlight < len(x):
             ax.axvline(x[highlight], color="#ffb300", lw=2, alpha=0.6)
     axs[-1].set_xlabel(xl)
-    axs[0].set_title(f"Pętla po {xl.split(' ')[0]}", fontsize=10, fontweight="bold")
+    axs[0].set_title(tr('Pętla po {0}').format(xl.split(' ')[0]), fontsize=10, fontweight="bold")
     finish(fig)
 
 
@@ -204,12 +205,12 @@ def plot_batch(fig: Figure, items, shift=0.6):
     axs = fig.subplots(1, 3)
     cols = iter_colors(max(len(ok), 2))
     for i, it in enumerate(ok):
-        lab = f"{it.row.pressure} GPa, {it.row.temperature} K"
+        lab = tr('{0} GPa, {1} K').format(it.row.pressure, it.row.temperature)
         axs[0].plot(it.norm.q, it.norm.S[-1] + i * shift, color=cols[i], lw=1, label=lab)
         g = it.norm.g_mod if it.norm.g_mod is not None else it.norm.g[-1]
         axs[1].plot(it.norm.R, g + i * shift, color=cols[i], lw=1, label=lab)
-    style_ax(axs[0], "q (nm⁻¹)", "S(q) + przesunięcie", "S(q)")
-    style_ax(axs[1], "r (nm)", "g(r) + przesunięcie", "g(r)")
+    style_ax(axs[0], tr("q (nm⁻¹)"), tr("S(q) + przesunięcie"), "S(q)")
+    style_ax(axs[1], tr("r (nm)"), tr("g(r) + przesunięcie"), "g(r)")
     if ok:
         axs[0].legend(fontsize=6)
     P, rho = [], []
@@ -219,6 +220,6 @@ def plot_batch(fig: Figure, items, shift=0.6):
         except Exception:
             pass
     axs[2].plot(P, rho, "o-", color=C_DATA)
-    style_ax(axs[2], "P (GPa)", "ρ (at/nm³)", "Gęstość")
+    style_ax(axs[2], "P (GPa)", tr("ρ (at/nm³)"), tr("Gęstość"))
     axs[2].ticklabel_format(useOffset=False)
     finish(fig)

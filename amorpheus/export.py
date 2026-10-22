@@ -12,6 +12,7 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg
 
 from . import plots
 from .data import FILE_FORMATS
+from .i18n import tr  # noqa: E402
 
 
 def _savetxt(fname, arr, **kw):
@@ -84,9 +85,9 @@ def save_normalization(res, out_dir, base=None, dpi=None, overwrite=False):
     st("_CN.txt", np.array(rows), "iter rho_slope(at/nm3) CN1 CN2 r0(nm) r_peak(nm) r_min(nm)")
 
     for suf, fn in [("_I", lambda f: _ax1(f, plots.plot_intensity, res)),
-                    ("_S", lambda f: plots.plot_single(f, res.q, res.S, "q (nm⁻¹)", "S(q)", "S(q)")),
-                    ("_F", lambda f: plots.plot_single(f, res.R, res.F, "r (nm)", "F(r)", "F(r)")),
-                    ("_gder", lambda f: plots.plot_single(f, res.R, res.g, "r (nm)", "g(r)", "g(r)"))]:
+                    ("_S", lambda f: plots.plot_single(f, res.q, res.S, tr("q (nm⁻¹)"), "S(q)", "S(q)")),
+                    ("_F", lambda f: plots.plot_single(f, res.R, res.F, tr("r (nm)"), "F(r)", "F(r)")),
+                    ("_gder", lambda f: plots.plot_single(f, res.R, res.g, tr("r (nm)"), "g(r)", "g(r)"))]:
         files.append(_savefig(fn, f"{b}{suf}.png", dpi))
     files.append(_savefig(lambda f: plots.plot_norm_overview(f, res), f"{b}_overview.png", dpi, size=(12, 8)))
     if res.g_mod is not None:
@@ -163,9 +164,9 @@ def save_batch(items, batch_path, out_dir=None, dpi=300, log=None):
         _savetxt(folder / f"F_{tag}.txt", np.vstack([res.R, res.F]).T, header=hdr)
         _savetxt(folder / f"gder_{tag}.txt", np.vstack([res.R, res.g]).T, header=hdr)
         _savefig(lambda f: _ax1(f, plots.plot_intensity, res), folder / f"I_{tag}.png", dpi)
-        _savefig(lambda f: plots.plot_single(f, res.q, res.S, "q (nm⁻¹)", "S(q)", f"S(q) {tag}"), folder / f"S_{tag}.png", dpi)
-        _savefig(lambda f: plots.plot_single(f, res.R, res.F, "r (nm)", "F(r)", f"F(r) {tag}"), folder / f"F_{tag}.png", dpi)
-        _savefig(lambda f: plots.plot_single(f, res.R, res.g, "r (nm)", "g(r)", f"g(r) {tag}"), folder / f"gder_{tag}.png", dpi)
+        _savefig(lambda f: plots.plot_single(f, res.q, res.S, tr("q (nm⁻¹)"), "S(q)", f"S(q) {tag}"), folder / f"S_{tag}.png", dpi)
+        _savefig(lambda f: plots.plot_single(f, res.R, res.F, tr("r (nm)"), "F(r)", f"F(r) {tag}"), folder / f"F_{tag}.png", dpi)
+        _savefig(lambda f: plots.plot_single(f, res.R, res.g, tr("r (nm)"), "g(r)", f"g(r) {tag}"), folder / f"gder_{tag}.png", dpi)
         if res.g_mod is not None:
             _savetxt(folder / f"grlast_{tag}.txt", np.array([res.R, res.g_mod]).T, header=hdr)
             _savefig(lambda f: plots.plot_modification(f, res), folder / f"grlast_{tag}.png", dpi)
@@ -179,5 +180,5 @@ def save_batch(items, batch_path, out_dir=None, dpi=300, log=None):
     try:
         shutil.copy2(batch_path, folder / f"Batch_{stamp}{batch_path.suffix}")
     except Exception as e:
-        log(f"Nie skopiowano tabeli batch: {e}")
+        log(tr('Nie skopiowano tabeli batch: {0}').format(e))
     return folder

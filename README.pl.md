@@ -21,6 +21,7 @@ Oryginał: <https://github.com/CelluleProjet/Amorpheus>
 
 - [Możliwości](#możliwości)
 - [Instalacja](#instalacja)
+- [Język](#język)
 - [Szybki start](#szybki-start)
 - [Dane wejściowe](#dane-wejściowe)
 - [Okno programu](#okno-programu)
@@ -45,6 +46,7 @@ Oryginał: <https://github.com/CelluleProjet/Amorpheus>
 - **Liczby koordynacyjne** CN1 i CN2 oraz gęstość z nachylenia F(r) dla każdej iteracji.
 - **Otwieranie danych z autodetekcją**: jednostka osi, długość fali, zakres, skład z nazwy pliku, plik tła.
 - Pliki projektu `Init.txt` są **zgodne z oryginałem w obie strony**.
+- **Dwujęzyczny interfejs**: polski i angielski.
 
 ## Instalacja
 
@@ -75,6 +77,21 @@ python amorpheus_qt.py
 
 Pakiet `xraylib` nie dla każdej wersji Pythona ma w pip gotową wersję dla Windows. Jeśli instalacja się nie
 powiedzie, użyj condy.
+
+## Język
+
+Interfejs jest dostępny po polsku i po angielsku:
+
+- **Przy pierwszym uruchomieniu** język dobierany jest według systemu: na polskim Windowsie po polsku,
+  na każdym innym po angielsku.
+- **Zmiana:** menu **Język / Language**. Program pyta, czy uruchomić się ponownie; po ponownym
+  uruchomieniu interfejs jest w nowym języku, a bieżący projekt wczytuje się znowu.
+- Wybór jest zapamiętywany przy kolejnych uruchomieniach.
+- Z linii poleceń: `python amorpheus_qt.py --lang en` (albo `--lang pl`) uruchamia program w danym języku
+  bez zmiany zapamiętanego ustawienia.
+
+Język dotyczy tylko interfejsu. Obliczenia, pliki projektu (`Init.txt`) i pliki wynikowe są takie same
+w obu wersjach.
 
 ## Szybki start
 
@@ -113,8 +130,6 @@ Pliki `Init.txt` z oryginalnego Amorpheusa otwiera się przez **Plik → Otwórz
 > dopasowanie ρ i bkfactor staje się niestabilne.
 
 ## Okno programu
-
-Interfejs jest po polsku.
 
 ### Panel parametrów (po lewej)
 
@@ -221,6 +236,9 @@ Test liczy wyniki referencyjne **oryginalnym** `equations.py` (normalizacja dla 
 χ², dopasowania, pętle r_min i q_max). Następnie liczy to samo nowym kodem w trybie zgodności i porównuje
 43 wielkości na pełnych tablicach. Trwa to ok. 2–3 min. Kopia oryginału jest w `tests/_original_equations.py`.
 
+Test kompletności tłumaczenia (`python tests/test_i18n.py`) sprawdza, że każdy tekst interfejsu ma
+wersję angielską i że w trybie angielskim na ekranie nie zostaje nic po polsku.
+
 ## Użycie w skryptach
 
 Obliczenia są oddzielone od interfejsu, więc można ich używać bez GUI:
@@ -247,8 +265,10 @@ amorpheus/export.py      zapis wyników
 amorpheus/plots.py       wykresy
 amorpheus/rps.py         usuwanie pików i wygładzanie
 amorpheus/gui/           interfejs PyQt5
+amorpheus/i18n.py        wybór języka i tłumaczenie tekstów interfejsu
+amorpheus/lang_en.py     słownik tłumaczeń PL → EN
 examples/                dane przykładowe (szkło Ce) i przykładowa tabela batch
-tests/                   test zgodności z oryginałem
+tests/                   test zgodności z oryginałem i test kompletności tłumaczenia
 ```
 
 ## Cytowanie i licencja

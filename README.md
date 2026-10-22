@@ -13,9 +13,9 @@ and several bug fixes.
 
 Original program: <https://github.com/CelluleProjet/Amorpheus>
 
-![Main window – normalization of the example data (Ce-based glass)](docs/screenshot.png)
+![Main window – normalization of the example data (Ce-based glass)](docs/screenshot_en.png)
 
-> The user interface is in **Polish**. The tables below give the Polish labels with their meaning.
+The interface is available in **English and Polish** (see [Language](#language)).
 
 ---
 
@@ -23,6 +23,7 @@ Original program: <https://github.com/CelluleProjet/Amorpheus>
 
 - [Features](#features)
 - [Installation](#installation)
+- [Language](#language)
 - [Quick start](#quick-start)
 - [Input data](#input-data)
 - [User interface](#user-interface)
@@ -49,6 +50,7 @@ Original program: <https://github.com/CelluleProjet/Amorpheus>
 - **Open data with auto-detection**: axis unit, wavelength, data range, composition from the file name,
   background file.
 - Project files (`Init.txt`) are **compatible with the original in both directions**.
+- **Bilingual interface**: English and Polish.
 
 ## Installation
 
@@ -80,16 +82,29 @@ python amorpheus_qt.py
 `xraylib` from pip does not provide a ready-made Windows build for every Python version. If the installation
 fails, use conda.
 
+## Language
+
+The interface is available in English and Polish:
+
+- **On first start** the language follows the system: Polish on a Polish system, English otherwise.
+- **To change it** use the **Język / Language** menu. The program asks whether to restart; after the
+  restart the interface appears in the new language and the current project is loaded again.
+- The choice is remembered for the following starts.
+- From the command line: `python amorpheus_qt.py --lang en` (or `--lang pl`) starts in a given language
+  without changing the saved setting.
+
+The language affects only the interface. Calculations, project files (`Init.txt`) and output files are the
+same in both languages.
+
 ## Quick start
 
 **Example:** on first start the program loads the example from the original (a Ce-based glass, `examples/`).
-Click **Normalizacja → Normalizuj** (Normalization → Normalize). To load the example again use
-**Plik → Wczytaj przykład** (File → Load example).
+Click **Normalization → Normalize**. To load the example again use **File → Load example (Ce glass)**.
 
 **Your own data:**
 
-1. **Plik → Otwórz dane…** (File → Open data…, Ctrl+O), the "Otwórz dane…" button in the left panel, or drag
-   the file onto the window.
+1. **File → Open data…** (Ctrl+O), the **Open data…** button in the left panel, or drag the file onto the
+   window.
 2. A dialog shows what was read from the file. Everything can be corrected:
    - axis unit (Q in Å⁻¹ or nm⁻¹, 2θ) and wavelength from the pyFAI, Dioptas or Fit2D header;
    - data range without the edge regions with I = 0 (no detector coverage), and suggested q_min/q_max;
@@ -97,16 +112,15 @@ Click **Normalizacja → Normalizuj** (Normalization → Normalize). To load the
      contains "wt", weight fractions are converted to atomic fractions);
    - number density ρ = 602.2·d / M̄, if you enter the mass density d [g/cm³];
    - a background file from the same folder (names containing *bkg*, *background*, *empty*, *gasket*…).
-3. **Utwórz projekt** (Create project) saves `<data_name>_Init.txt` next to the data. The project is also
+3. **Create project** saves `<data_name>_Init.txt` next to the data. The project is also
    saved automatically whenever a calculation starts and when the program closes. Results are written to
    the data folder.
 4. When you open the same data again, the program offers to load the saved project.
 
-Typical workflow: **Pętla r_min** (r_min loop – choose r_min from the ρ plateau) → **Pętla q_max**
-(q_max loop) → **Normalizacja** → **Zapisz wyniki** (Save results).
+Typical workflow: **r_min loop** (choose r_min from the ρ plateau) → **q_max loop** → **Normalization**
+→ **Save results**.
 
-`Init.txt` files from the original Amorpheus can be opened with **Plik → Otwórz projekt** (File → Open
-project, Ctrl+Shift+O).
+`Init.txt` files from the original Amorpheus can be opened with **File → Open project** (Ctrl+Shift+O).
 
 ## Input data
 
@@ -124,42 +138,39 @@ project, Ctrl+Shift+O).
 
 ### Parameter panel (left)
 
-| Label | Meaning |
+| Field | Meaning |
 |---|---|
-| Dane / Tło | data and background files |
+| Data / Background | data and background files |
 | Format | 1: 2θ, no background · 2: 2θ + background · 3: Q, no background · 4: Q + background |
-| Jedn. Q | Q unit in the file: Å⁻¹ (as in the original) or nm⁻¹ (e.g. pyFAI `q_nm^-1`); formats 3 and 4 only |
+| Q unit | Q unit in the file: Å⁻¹ (as in the original) or nm⁻¹ (e.g. pyFAI `q_nm^-1`); formats 3 and 4 only |
 | Incoh. | 1: empty-cell background, the sample's Compton scattering is subtracted; 0: background measured on the sample |
 | λ [nm] | wavelength; 2θ data only |
 | q_min, q_max [nm⁻¹] | analysis range (1 Å⁻¹ = 10 nm⁻¹) |
 | r_min [nm] | cut-off radius: F(r) = −4πρr is required for r < r_min |
 | ρ [at/nm³], bkfactor | values used for normalization and starting point of the fit (bounds: ρ₀ ± 50, bk 0.7–1.2) |
-| Skład | composition (atomic fractions); "Do 1" fills the selected row so that the sum = 1 |
+| Composition | atomic fractions; **To 1** fills the selected row so that the sum = 1 |
 | S(q<q_min) | 1: constant = S(q_min) (recommended); 0: zero; 2: Lorentzian (unstable, diagnostics only) |
-| Normalizacja | 0: standard; 1: additionally g(r) with the modification function M(Q, Δ(r)) |
-| Iteracje | number of Kaplow iterations (4 as in the original) |
-| r_max wyn. | r range of F(r) and g(r) in the output files |
-| Poprawka jedn. | unit correction of the sum rule (recommended); unchecked = results identical to v1.0.5 |
+| Normalization | 0: standard; 1: additionally g(r) with the modification function M(Q, Δ(r)) |
+| Iterations | number of Kaplow iterations (4 as in the original) |
+| Output r_max | r range of F(r) and g(r) in the output files |
+| Unit correction | unit correction of the sum rule (recommended); unchecked = results identical to v1.0.5 |
 
-The "Opcje obliczeń" (Calculation options) and "Zapis wyników" (Saving results) groups can be collapsed
-by clicking their title. A full description of the parameters is available in **Pomoc → Pomoc – opis
-parametrów** (Help → Parameter description).
+The **Calculation options** and **Saving results** groups can be collapsed by clicking their title.
+A full description is available in **Help → Help – parameter description**.
 
 ### Tabs
 
-- **Dane** (Data): raw data and background. The yellow band marks the analysed range; the top axis is q in nm⁻¹.
-- **Normalizacja** (Normalization): I(q), S(q), F(r) and g(r) for every iteration. The table shows the density
-  from the F(r < r_min) slope, CN1, CN2 and peak positions. "Dopasuj ρ, bk → normalizuj" (Fit ρ, bk →
-  normalize) first minimizes χ², then normalizes. Parameters a and b of the modification function can be
-  adjusted.
-- **Pętla r_min / Pętla q_max** (r_min / q_max loop): fit of ρ (and bk) for a series of values. The table
-  fills in as the calculation runs; the selected row can be transferred to the parameters.
-- **Mapa χ²** (χ² map): χ²(ρ, bk) on a grid, raw and normalized. The minimum can be transferred to the
-  parameters.
+- **Data**: raw data and background. The yellow band marks the analysed range; the top axis is q in nm⁻¹.
+- **Normalization**: I(q), S(q), F(r) and g(r) for every iteration. The table shows the density from the
+  F(r < r_min) slope, CN1, CN2 and peak positions. **Fit ρ, bk → normalize** first minimizes χ², then
+  normalizes. Parameters a and b of the modification function can be adjusted.
+- **r_min loop / q_max loop**: fit of ρ (and bk) for a series of values. The table fills in as the
+  calculation runs; the selected row can be applied to the parameters.
+- **χ² map**: χ²(ρ, bk) on a grid, raw and normalized. The minimum can be applied to the parameters.
 - **Batch**: a measurement series from a table in the layout of the original `Batch.ods` (example:
   `examples/Batch.csv`). Rows starting with `#` are skipped.
-- **RPS – piki i wygładzanie** (peaks and smoothing): removal of crystalline peaks and smoothing. Select the
-  range on the plot: left click = start, right click = end. The result can be set as the data file directly.
+- **RPS – peaks and smoothing**: removal of crystalline peaks and smoothing. Select the range on the plot:
+  left click = start, right click = end. The result can be set as the data file directly.
 
 Calculations run in the background, so the window does not freeze. **Stop** interrupts a loop; partial
 results are kept.
@@ -191,8 +202,7 @@ File names and columns are the same as in the original; each file also has a hea
 | χ² map | `Norm_Chi2.txt` (rows = ρ), `Norm_Chi2_norm.txt`, `Norm_Chi2_axes.txt`, `.png` |
 | Batch | folder `Batch_YYYYMMDD_HHhMM` with `S_`, `F_`, `gder_`, `grlast_` (.txt, .png) for every row, `Batch_results_*.txt`, `Batch_results.png` and a copy of the table |
 
-Existing files are not overwritten: a number `_0`, `_1`… is appended (unless "Nadpisuj pliki" – Overwrite
-files – is checked). Files are written in UTF-8.
+Existing files are not overwritten: a number `_0`, `_1`… is appended (unless **Overwrite files** is checked). Files are written in UTF-8.
 
 ## Changes from the original v1.0.5
 
@@ -235,6 +245,9 @@ SofQ 0/1, QStep, χ², fits, r_min and q_max loops). It then computes the same w
 compatibility mode and compares 43 quantities on full arrays. This takes about 2–3 minutes. A copy of the
 original is stored in `tests/_original_equations.py`.
 
+The translation test (`python tests/test_i18n.py`) checks that every interface text has an English
+version and that nothing Polish remains on screen in English mode.
+
 ## Scripting
 
 The calculations are separate from the interface and can be used without the GUI:
@@ -261,8 +274,10 @@ amorpheus/export.py      writing results
 amorpheus/plots.py       plots
 amorpheus/rps.py         peak removal and smoothing
 amorpheus/gui/           PyQt5 interface
+amorpheus/i18n.py        language selection and translation of interface texts
+amorpheus/lang_en.py     PL → EN translation table
 examples/                example data (Ce glass) and an example batch table
-tests/                   compatibility test against the original
+tests/                   compatibility test against the original and translation completeness test
 ```
 
 ## Citation and licence

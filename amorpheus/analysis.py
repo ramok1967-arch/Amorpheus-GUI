@@ -17,6 +17,7 @@ from lmfit import Parameters, minimize
 
 from . import physics as ph
 from .data import Params, Dataset, prepare
+from .i18n import tr  # noqa: E402
 
 Progress = Optional[Callable[[int, int, str], None]]
 Cancelled = Optional[Callable[[], bool]]
@@ -33,10 +34,10 @@ def _never():
 def inclusive_range(start, stop, step):
     """Zakres z krokiem, wlacznie z koncem (odporny na bledy zaokraglen)."""
     if step <= 0:
-        raise ValueError("Krok musi byc dodatni.")
+        raise ValueError(tr("Krok musi byc dodatni."))
     n = int(np.floor((stop - start) / step + 1e-9)) + 1
     if n < 1:
-        raise ValueError("Pusty zakres.")
+        raise ValueError(tr("Pusty zakres."))
     return start + step * np.arange(n)
 
 
@@ -166,12 +167,12 @@ def loop_rmin(p: Params, values, rho0, bk0, progress: Progress = None,
     for i, r in enumerate(values):
         if cancelled():
             break
-        progress(i, len(values), f"rmin = {r:.4f} nm")
+        progress(i, len(values), tr('rmin = {0:.4f} nm').format(r))
         res = Problem(p, ds=ds, rmin=float(r)).fit(rho0, bk0)
         out.append(res)
         if on_result:
             on_result(res)
-    progress(len(out), len(values), "gotowe")
+    progress(len(out), len(values), tr("gotowe"))
     return out
 
 
@@ -183,13 +184,13 @@ def loop_qmax(p: Params, values, rho0, bk0, progress: Progress = None,
     for i, qm in enumerate(values):
         if cancelled():
             break
-        progress(i, len(values), f"qmax = {qm:.3f} nm⁻¹")
+        progress(i, len(values), tr('qmax = {0:.3f} nm⁻¹').format(qm))
         res = Problem(p, qmax=float(qm)).fit(rho0, bk0)
         res.qmax = float(qm)
         out.append(res)
         if on_result:
             on_result(res)
-    progress(len(out), len(values), "gotowe")
+    progress(len(out), len(values), tr("gotowe"))
     return out
 
 
@@ -218,7 +219,7 @@ class Chi2Map:
 def chi2_map(p: Params, rmin, rho_c, rho_width, bk_c, bk_width, n_rho, n_bk,
              progress: Progress = None, cancelled: Cancelled = None) -> Chi2Map:
     if not p.has_bkg:
-        raise ValueError("Mapa chi² wymaga danych z tlem (format 2 lub 4).")
+        raise ValueError(tr("Mapa chi² wymaga danych z tlem (format 2 lub 4)."))
     progress = progress or _noprog
     cancelled = cancelled or _never
     pr = Problem(p, rmin=rmin)
@@ -263,7 +264,7 @@ def run_batch(rows, progress: Progress = None, cancelled: Cancelled = None,
         if cancelled():
             break
         p = row.params
-        progress(i, len(rows), f"{row.label}: dopasowanie")
+        progress(i, len(rows), tr('{0}: dopasowanie').format(row.label))
         it = BatchItem(row)
         try:
             errs = p.validate()
@@ -272,15 +273,14 @@ def run_batch(rows, progress: Progress = None, cancelled: Cancelled = None,
             ds = prepare(p)
             fr = Problem(p, ds=ds).fit(p.rho, p.bkfactor)
             it.fit = fr
-            log(f"[{i+1}/{len(rows)}] {row.label}: rho = {fr.rho:.3f} at/nm³, "
-                f"bk = {fr.bkfactor:.4f}, χ² = {fr.chi2:.4g}  ({fr.seconds:.1f} s)")
-            progress(i, len(rows), f"{row.label}: normalizacja")
+            log(tr('[{0}/{1}] {2}: rho = {3:.3f} at/nm³, bk = {4:.4f}, χ² = {5:.4g}  ({6:.1f} s)').format(i+1, len(rows), row.label, fr.rho, fr.bkfactor, fr.chi2, fr.seconds))
+            progress(i, len(rows), tr('{0}: normalizacja').format(row.label))
             it.norm = run_normalization(p, rho=fr.rho, bk=fr.bkfactor, ds=ds)
         except Exception as e:  # jeden zly wiersz nie przerywa calosci
             it.error = str(e)
-            log(f"[{i+1}/{len(rows)}] {row.label}: BLAD - {e}")
+            log(tr('[{0}/{1}] {2}: BLAD - {3}').format(i+1, len(rows), row.label, e))
         items.append(it)
         if on_item:
             on_item(it)
-    progress(len(items), len(rows), "gotowe")
+    progress(len(items), len(rows), tr("gotowe"))
     return items

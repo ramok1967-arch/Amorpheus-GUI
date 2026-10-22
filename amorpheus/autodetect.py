@@ -18,6 +18,7 @@ from typing import List, Optional
 import numpy as np
 
 from .data import Params, read_xy, tth_to_q
+from .i18n import tr  # noqa: E402
 
 AVOGADRO_NM = 602.214076   # N_A * 1e-21: [at/nm^3] = 602.2 * d[g/cm^3] / M[g/mol]
 BKG_WORDS = ("empty", "bkg", "background", "tlo", "tło", "gasket", "cell", "blank", "air", "pusta")
@@ -94,18 +95,17 @@ def sniff(path) -> Detected:
     det.x_lo, det.x_hi, det.n_points = float(d[0, 0]), float(d[-1, 0]), len(d)
     full = read_xy(path, trim_zeros=False)
     if len(full) > len(d):
-        det.warnings.append(f"Pominięto {len(full) - len(d)} punktów na krańcach danych "
-                            f"(obszar z I = 0 – brak pokrycia detektora; dane do x = {d[-1, 0]:.4g}).")
+        det.warnings.append(tr('Pominięto {0} punktów na krańcach danych (obszar z I = 0 – brak pokrycia detektora; dane do x = {1:.4g}).').format(len(full) - len(d), d[-1, 0]))
     if det.unit is None:
         # heurystyka: Q w A^-1 rzadko > 30, 2theta zwykle 2..60, Q w nm^-1 zwykle > 30
-        det.warnings.append("Nie rozpoznano jednostki osi z nagłówka – sprawdź format.")
+        det.warnings.append(tr("Nie rozpoznano jednostki osi z nagłówka – sprawdź format."))
         det.unit = "q_A" if det.x_hi < 30 else "q_nm"
     if det.unit == "2th_rad":
-        det.warnings.append("Oś 2θ w radianach nie jest obsługiwana – przelicz na stopnie albo Q.")
+        det.warnings.append(tr("Oś 2θ w radianach nie jest obsługiwana – przelicz na stopnie albo Q."))
     if det.polarization is not None and det.polarization.lower() in ("none", "0", "0.0"):
-        det.warnings.append("Brak korekty polaryzacji w integracji (Polarization factor: None).")
+        det.warnings.append(tr("Brak korekty polaryzacji w integracji (Polarization factor: None)."))
     if det.unit.startswith("2th") and det.wavelength_nm is None:
-        det.warnings.append("Dane w 2θ, a w nagłówku nie ma długości fali – podaj λ.")
+        det.warnings.append(tr("Dane w 2θ, a w nagłówku nie ma długości fali – podaj λ."))
     return det
 
 
@@ -234,7 +234,7 @@ def build_params(data_path, bkg_path=None, base: Optional[Params] = None,
         x = (x + [0.0] * 6)[:max(6, len(x))]
         p.elements, p.contents = el, x
     else:
-        det.warnings.append("Nie odczytano składu z nazwy pliku – wpisz go ręcznie.")
+        det.warnings.append(tr("Nie odczytano składu z nazwy pliku – wpisz go ręcznie."))
         p.elements, p.contents = [""] * 6, [0.0] * 6
     # zakres q
     try:
@@ -252,6 +252,6 @@ def build_params(data_path, bkg_path=None, base: Optional[Params] = None,
             p.qmin, p.qmax = lo, hi
         det.main_peak = qp
     except Exception as e:
-        det.warnings.append(f"Nie ustalono zakresu q: {e}")
+        det.warnings.append(tr('Nie ustalono zakresu q: {0}').format(e))
     p.save_norm, p.save_rmin, p.save_qmax = "Norm", "MinRmin", "MinQmax"
     return p, det

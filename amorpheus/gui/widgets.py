@@ -14,6 +14,7 @@ from matplotlib.figure import Figure
 
 from ..data import Params, FILE_FORMATS, load_init, save_init, file_q_range
 from .. import physics as ph
+from ..i18n import tr  # noqa: E402
 
 
 # --------------------------------------------------------------------------------------
@@ -29,7 +30,7 @@ class PlotWidget(QtWidgets.QWidget):
         lay.setSpacing(0)
         lay.addWidget(self.toolbar)
         lay.addWidget(self.canvas)
-        self.placeholder("Brak danych do wyświetlenia")
+        self.placeholder(tr("Brak danych do wyświetlenia"))
 
     def placeholder(self, text):
         self.fig.clear()
@@ -42,7 +43,7 @@ class PlotWidget(QtWidgets.QWidget):
         try:
             fn(self.fig, *a, **kw)
         except Exception as e:
-            self.placeholder(f"Błąd wykresu: {e}")
+            self.placeholder(tr('Błąd wykresu: {0}').format(e))
         self.canvas.draw_idle()
 
 
@@ -112,8 +113,9 @@ def ispin(lo, hi, val):
 class FileEdit(QtWidgets.QWidget):
     changed = QtCore.pyqtSignal()
 
-    def __init__(self, caption, filt="Dane (*.dat *.xy *.txt *.chi *.csv);;Wszystkie (*)", folder=False):
+    def __init__(self, caption, filt=None, folder=False):
         super().__init__()
+        filt = filt or tr("Dane (*.dat *.xy *.txt *.chi *.csv);;Wszystkie (*)")
         self.caption, self.filt, self.folder = caption, filt, folder
         self.edit = QtWidgets.QLineEdit()
         self.btn = QtWidgets.QToolButton()
@@ -213,13 +215,13 @@ class ParamsPanel(QtWidgets.QScrollArea):
 
         # --- Init.txt -------------------------------------------------------------
         hb = QtWidgets.QHBoxLayout()
-        self.btn_load = QtWidgets.QPushButton("Otwórz dane…")
+        self.btn_load = QtWidgets.QPushButton(tr("Otwórz dane…"))
         self.btn_load.setObjectName("primary")
-        self.btn_load.setToolTip("Wybierz plik danych (i tła) – parametry zostaną odczytane z pliku,\n"
-                                 "a projekt <dane>_Init.txt utworzony obok danych.")
-        self.btn_save = QtWidgets.QPushButton("Zapisz")
-        self.btn_save.setToolTip("Zapisuje parametry do pliku projektu (zapis odbywa się też automatycznie\n"
-                                 "przy każdym uruchomieniu obliczeń i przy zamknięciu programu).")
+        self.btn_load.setToolTip(tr("Wybierz plik danych (i tła) – parametry zostaną odczytane z pliku,\n"
+                                 "a projekt <dane>_Init.txt utworzony obok danych."))
+        self.btn_save = QtWidgets.QPushButton(tr("Zapisz"))
+        self.btn_save.setToolTip(tr("Zapisuje parametry do pliku projektu (zapis odbywa się też automatycznie\n"
+                                 "przy każdym uruchomieniu obliczeń i przy zamknięciu programu)."))
         self.btn_load.clicked.connect(self.open_data_requested.emit)
         self.btn_save.clicked.connect(lambda: self.save_project(quiet=False))
         hb.addWidget(self.btn_load)
@@ -231,27 +233,27 @@ class ParamsPanel(QtWidgets.QScrollArea):
         v.addWidget(self.lbl_init)
 
         # --- pliki ---------------------------------------------------------------
-        g = QtWidgets.QGroupBox("Dane")
+        g = QtWidgets.QGroupBox(tr("Dane"))
         f = compact_form(g)
-        self.f_data = FileEdit("Plik danych")
-        self.f_bkg = FileEdit("Plik tła")
+        self.f_data = FileEdit(tr("Plik danych"))
+        self.f_bkg = FileEdit(tr("Plik tła"))
         self.c_format = QtWidgets.QComboBox()
         for k, t in FILE_FORMATS.items():
             self.c_format.addItem(f"{k}: {t}", k)
         self.c_incoh = QtWidgets.QComboBox()
-        self.c_incoh.addItem("1: pusta kom.", 1)
-        self.c_incoh.addItem("0: na próbce", 0)
-        self.c_incoh.setToolTip("1: tło z pustej komórki (Compton odejmowany)\n0: tło zmierzone na próbce")
+        self.c_incoh.addItem(tr("1: pusta kom."), 1)
+        self.c_incoh.addItem(tr("0: na próbce"), 0)
+        self.c_incoh.setToolTip(tr("1: tło z pustej komórki (Compton odejmowany)\n0: tło zmierzone na próbce"))
         self.s_lambda = dspin(1e-5, 10, 6, 0.0001, 0.03738, "nm")
         self.c_qunit = QtWidgets.QComboBox()
         self.c_qunit.addItem("Å⁻¹", "A")
-        self.c_qunit.addItem("nm⁻¹", "nm")
-        self.c_qunit.setToolTip("Jednostka osi Q w pliku danych (formaty 3 i 4)")
-        f.addRow("Dane", self.f_data)
-        f.addRow("Tło", self.f_bkg)
-        f.addRow("Format", self.c_format)
-        f.addRow("Jedn. Q", self.c_qunit)
-        f.addRow("Incoh.", self.c_incoh)
+        self.c_qunit.addItem(tr("nm⁻¹"), "nm")
+        self.c_qunit.setToolTip(tr("Jednostka osi Q w pliku danych (formaty 3 i 4)"))
+        f.addRow(tr("Dane"), self.f_data)
+        f.addRow(tr("Tło"), self.f_bkg)
+        f.addRow(tr("Format"), self.c_format)
+        f.addRow(tr("Jedn. Q"), self.c_qunit)
+        f.addRow(tr("Incoh."), self.c_incoh)
         f.addRow("λ", self.s_lambda)
         self.lbl_range = QtWidgets.QLabel("")
         self.lbl_range.setObjectName("hint")
@@ -260,31 +262,31 @@ class ParamsPanel(QtWidgets.QScrollArea):
         v.addWidget(g)
 
         # --- zakresy -------------------------------------------------------------
-        g = QtWidgets.QGroupBox("Zakresy i start")
+        g = QtWidgets.QGroupBox(tr("Zakresy i start"))
         f = compact_form(g)
         self.s_qmin = dspin(0.01, 1000, 3, 0.5, 15, "nm⁻¹")
         self.s_qmax = dspin(0.01, 1000, 3, 1, 78, "nm⁻¹")
-        self.btn_qfile = QtWidgets.QPushButton("q z pliku")
-        self.btn_qfile.setToolTip("Ustaw q_min i q_max na pełny zakres danych w pliku")
+        self.btn_qfile = QtWidgets.QPushButton(tr("q z pliku"))
+        self.btn_qfile.setToolTip(tr("Ustaw q_min i q_max na pełny zakres danych w pliku"))
         self.btn_qfile.clicked.connect(self.q_from_file)
         self.s_rmin = dspin(0.001, ph.FIT_R_MAX, 4, 0.005, 0.22, "nm")
         self.s_rho = dspin(1, 500, 4, 0.1, 34.68, "at/nm³")
         self.s_bk = dspin(ph.BK_BOUNDS[0], ph.BK_BOUNDS[1], 5, 0.001, 0.927)
-        f.addRow("q_min", self.s_qmin)
-        f.addRow("q_max", self.s_qmax)
+        f.addRow(tr("q_min"), self.s_qmin)
+        f.addRow(tr("q_max"), self.s_qmax)
         f.addRow("", self.btn_qfile)
-        f.addRow("r_min", self.s_rmin)
+        f.addRow(tr("r_min"), self.s_rmin)
         f.addRow("ρ", self.s_rho)
-        f.addRow("bkfactor", self.s_bk)
+        f.addRow(tr("bkfactor"), self.s_bk)
         v.addWidget(g)
 
         # --- sklad ---------------------------------------------------------------
-        g = QtWidgets.QGroupBox("Skład (ułamki at.)")
+        g = QtWidgets.QGroupBox(tr("Skład (ułamki at.)"))
         lay = QtWidgets.QVBoxLayout(g)
         lay.setContentsMargins(6, 4, 6, 4)
         lay.setSpacing(6)
         self.t_comp = QtWidgets.QTableWidget(self.N_EL, 2)
-        self.t_comp.setHorizontalHeaderLabels(["Pierw.", "Udział"])
+        self.t_comp.setHorizontalHeaderLabels([tr("Pierw."), tr("Udział")])
         hh = self.t_comp.horizontalHeader()
         hh.setSectionResizeMode(QtWidgets.QHeaderView.Fixed)
         hh.resizeSection(0, 62)
@@ -304,10 +306,10 @@ class ParamsPanel(QtWidgets.QScrollArea):
         side = QtWidgets.QVBoxLayout()
         side.setSpacing(6)
         self.lbl_sum = QtWidgets.QLabel()
-        self.btn_auto = QtWidgets.QPushButton("Do 1")
-        self.btn_auto.setToolTip("Ustawia udział zaznaczonego pierwiastka tak, aby suma = 1")
+        self.btn_auto = QtWidgets.QPushButton(tr("Do 1"))
+        self.btn_auto.setToolTip(tr("Ustawia udział zaznaczonego pierwiastka tak, aby suma = 1"))
         self.btn_auto.clicked.connect(self.autofill)
-        side.addWidget(QtWidgets.QLabel("suma:"))
+        side.addWidget(QtWidgets.QLabel(tr("suma:")))
         side.addWidget(self.lbl_sum)
         side.addWidget(self.btn_auto)
         side.addStretch(1)
@@ -317,50 +319,50 @@ class ParamsPanel(QtWidgets.QScrollArea):
         v.addWidget(g)
 
         # --- opcje ---------------------------------------------------------------
-        g = Collapsible("Opcje obliczeń", True)
+        g = Collapsible(tr("Opcje obliczeń"), True)
         f = compact_form(g)
         self.c_sofq = QtWidgets.QComboBox()
-        self.c_sofq.addItem("1: = S(q_min)", 1)
+        self.c_sofq.addItem(tr("1: = S(q_min)"), 1)
         self.c_sofq.addItem("0: = 0", 0)
-        self.c_sofq.addItem("2: lorentz. (niestabilne)", 2)
-        self.c_sofq.setToolTip("S(q) poniżej q_min.\n1: S(q<q_min) = S(q_min)\n0: S(q<q_min) = 0\n2: lorentzówka – NIESTABILNE, tylko diagnostyka\nZalecane: 1. Opcja 2 jest ukryta w oryginale (dopasowanie lorentzowki z na sztywno\n"
-                               "wpisanym startem); zwykle psuje dopasowanie gęstości.")
+        self.c_sofq.addItem(tr("2: lorentz. (niestabilne)"), 2)
+        self.c_sofq.setToolTip(tr("S(q) poniżej q_min.\n1: S(q<q_min) = S(q_min)\n0: S(q<q_min) = 0\n2: lorentzówka – NIESTABILNE, tylko diagnostyka\nZalecane: 1. Opcja 2 jest ukryta w oryginale (dopasowanie lorentzowki z na sztywno\n"
+                               "wpisanym startem); zwykle psuje dopasowanie gęstości."))
         self.c_sofq.currentIndexChanged.connect(self._sofq_warn)
         self.c_norm = QtWidgets.QComboBox()
-        self.c_norm.addItem("0: standardowa", 0)
+        self.c_norm.addItem(tr("0: standardowa"), 0)
         self.c_norm.addItem("1: z M(Q,Δ(r))", 1)
-        self.c_norm.setToolTip("1: z funkcją modyfikującą M(Q,Δ(r)) (Lorch, zmienna szerokość)")
+        self.c_norm.setToolTip(tr("1: z funkcją modyfikującą M(Q,Δ(r)) (Lorch, zmienna szerokość)"))
         self.s_iter = ispin(0, 50, 4)
         self.s_rmax = dspin(0.2, 5, 2, 0.1, 1.0, "nm")
-        self.ch_fix = QtWidgets.QCheckBox("Poprawka jedn. (zalec.)")
+        self.ch_fix = QtWidgets.QCheckBox(tr("Poprawka jedn. (zalec.)"))
         self.ch_fix.setChecked(True)
-        self.ch_fix.setToolTip("Zalecane. Odznaczenie = wyniki identyczne z oryginałem v1.0.5,\n"
-                               "w którym człon gęstości w regule sum był 10× za mały.")
-        self.ch_qstep = QtWidgets.QCheckBox("QStep (2θ)")
-        self.ch_qstep.setToolTip("Stały krok dq – diagnostyka; tylko dla danych w 2θ")
-        f.addRow("S(q<q_min)", self.c_sofq)
-        f.addRow("Normalizacja", self.c_norm)
-        f.addRow("Iteracje", self.s_iter)
-        f.addRow("r_max wyn.", self.s_rmax)
+        self.ch_fix.setToolTip(tr("Zalecane. Odznaczenie = wyniki identyczne z oryginałem v1.0.5,\n"
+                               "w którym człon gęstości w regule sum był 10× za mały."))
+        self.ch_qstep = QtWidgets.QCheckBox(tr("QStep (2θ)"))
+        self.ch_qstep.setToolTip(tr("Stały krok dq – diagnostyka; tylko dla danych w 2θ"))
+        f.addRow(tr("S(q<q_min)"), self.c_sofq)
+        f.addRow(tr("Normalizacja"), self.c_norm)
+        f.addRow(tr("Iteracje"), self.s_iter)
+        f.addRow(tr("r_max wyn."), self.s_rmax)
         f.addRow(self.ch_fix)
         f.addRow(self.ch_qstep)
         v.addWidget(g)
 
         # --- zapis ---------------------------------------------------------------
-        g = Collapsible("Zapis wyników", False)
+        g = Collapsible(tr("Zapis wyników"), False)
         self.g_save = g
         f = compact_form(g)
-        self.f_out = FileEdit("Folder wyników", folder=True)
+        self.f_out = FileEdit(tr("Folder wyników"), folder=True)
         self.e_norm = QtWidgets.QLineEdit("Norm")
         self.e_rmin = QtWidgets.QLineEdit("MinRmin")
         self.e_qmax = QtWidgets.QLineEdit("MinQmax")
         self.s_dpi = ispin(50, 1200, 300)
-        self.ch_overwrite = QtWidgets.QCheckBox("Nadpisuj pliki")
-        f.addRow("Folder", self.f_out)
-        f.addRow("Prefiks norm.", self.e_norm)
-        f.addRow("Prefiks r_min", self.e_rmin)
-        f.addRow("Prefiks q_max", self.e_qmax)
-        f.addRow("DPI", self.s_dpi)
+        self.ch_overwrite = QtWidgets.QCheckBox(tr("Nadpisuj pliki"))
+        f.addRow(tr("Folder"), self.f_out)
+        f.addRow(tr("Prefiks norm."), self.e_norm)
+        f.addRow(tr("Prefiks r_min"), self.e_rmin)
+        f.addRow(tr("Prefiks q_max"), self.e_qmax)
+        f.addRow(tr("DPI"), self.s_dpi)
         f.addRow(self.ch_overwrite)
         v.addWidget(g)
         v.addStretch(1)
@@ -395,7 +397,7 @@ class ParamsPanel(QtWidgets.QScrollArea):
         try:
             p = self.params()
             lo, hi = file_q_range(p)
-            self.lbl_range.setText(f"zakres w pliku: q = {lo:.3f} – {hi:.3f} nm⁻¹")
+            self.lbl_range.setText(tr('zakres w pliku: q = {0:.3f} – {1:.3f} nm⁻¹').format(lo, hi))
             self.file_range = (lo, hi)
         except Exception as e:
             self.lbl_range.setText(f"⚠ {str(e)[:90]}")
@@ -404,8 +406,8 @@ class ParamsPanel(QtWidgets.QScrollArea):
 
     def _sofq_warn(self):
         if self.c_sofq.currentData() == 2:
-            self.log.emit("UWAGA: SofQ = 2 (lorentzowka) jest niestabilne - dopasowanie rho moze uciec do granicy. "
-                          "Zalecane SofQ = 1.")
+            self.log.emit(tr("UWAGA: SofQ = 2 (lorentzowka) jest niestabilne - dopasowanie rho moze uciec do granicy. "
+                          "Zalecane SofQ = 1."))
 
     def q_from_file(self):
         self._files_changed()
@@ -451,7 +453,7 @@ class ParamsPanel(QtWidgets.QScrollArea):
     def autofill(self):
         row = self.t_comp.currentRow()
         if row < 0:
-            QtWidgets.QMessageBox.information(self, "Skład", "Zaznacz wiersz pierwiastka, który ma uzupełnić sumę.")
+            QtWidgets.QMessageBox.information(self, tr("Skład"), tr("Zaznacz wiersz pierwiastka, który ma uzupełnić sumę."))
             return
         tot = 0.0
         for r in range(self.N_EL):
@@ -549,18 +551,18 @@ class ParamsPanel(QtWidgets.QScrollArea):
         self.init_path = str(path)
         self.f_out.setText(p.base_dir)
         self.set_params(p)
-        self.lbl_init.setText(f"Projekt: {path}")
+        self.lbl_init.setText(tr('Projekt: {0}').format(path))
         self.loaded.emit()
-        self.log.emit(f"Wczytano parametry z {path}")
+        self.log.emit(tr('Wczytano parametry z {0}').format(path))
 
     def load_dialog(self):
-        f, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Wczytaj Init.txt", self.base_dir,
-                                                     "Init (*.txt *.ini);;Wszystkie (*)")
+        f, _ = QtWidgets.QFileDialog.getOpenFileName(self, tr("Wczytaj Init.txt"), self.base_dir,
+                                                     tr("Init (*.txt *.ini);;Wszystkie (*)"))
         if f:
             try:
                 self.load_init(f)
             except Exception as e:
-                QtWidgets.QMessageBox.critical(self, "Init", f"Nie udało się wczytać pliku:\n{e}")
+                QtWidgets.QMessageBox.critical(self, tr("Init"), tr('Nie udało się wczytać pliku:\n{0}').format(e))
 
     def _write(self, f):
         """Zapis parametrow do pliku f; nazwy plikow wzgledne, jesli leza w tym samym folderze."""
@@ -595,18 +597,18 @@ class ParamsPanel(QtWidgets.QScrollArea):
         try:
             self._write(path)
             if not quiet:
-                self.log.emit(f"Zapisano projekt: {path}")
+                self.log.emit(tr('Zapisano projekt: {0}').format(path))
             return True
         except Exception as e:
-            self.log.emit(f"Nie zapisano projektu {path}: {e}")
+            self.log.emit(tr('Nie zapisano projektu {0}: {1}').format(path, e))
             return False
 
     def save_dialog(self):
         start = self.init_path or os.path.join(self.base_dir or "", "Init.txt")
-        f, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Zapisz Init.txt", start, "Init (*.txt)")
+        f, _ = QtWidgets.QFileDialog.getSaveFileName(self, tr("Zapisz Init.txt"), start, tr("Init (*.txt)"))
         if not f:
             return
         self._write(f)
         self.init_path = f
-        self.lbl_init.setText(f"Projekt: {f}")
-        self.log.emit(f"Zapisano parametry do {f}")
+        self.lbl_init.setText(tr('Projekt: {0}').format(f))
+        self.log.emit(tr('Zapisano parametry do {0}').format(f))
