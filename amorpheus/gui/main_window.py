@@ -17,6 +17,15 @@ from .opendata import OpenDataDialog, DATA_FILTER
 from .. import autodetect as ad
 from ..i18n import tr, LANG, LANGUAGES, save_language, strip_lang_args  # noqa: E402
 
+def _is_project(path):
+    """Plik projektu (Init.txt) rozpoznawany po sekcji [Parameters], nie po nazwie."""
+    try:
+        with open(path, encoding="utf-8", errors="replace") as f:
+            return "[Parameters]" in f.read(4000)
+    except Exception:
+        return False
+
+
 # sciezka skryptu startowego zapamietana przy imporcie (do ponownego uruchomienia po zmianie jezyka)
 _SCRIPT = os.path.abspath(sys.argv[0]) if sys.argv and sys.argv[0] else ""
 
@@ -218,6 +227,9 @@ class MainWindow(QtWidgets.QMainWindow):
             if not path:
                 return
         path = Path(path)
+        if _is_project(path):          # wybrano plik projektu (Init.txt) zamiast danych
+            self._load_project(path)
+            return
         proj = ad.project_path(path)
         if proj.exists():
             r = QtWidgets.QMessageBox.question(
@@ -270,15 +282,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def open_path(self, path):
         """Init.txt -> wczytaj projekt, inny plik -> otworz jako dane."""
-        path = Path(path)
-        try:
-            head = path.read_text(encoding="utf-8", errors="replace")[:2000]
-        except Exception:
-            head = ""
-        if "[Parameters]" in head:
-            self._load_project(path)
-        else:
-            self.open_data(path)
+        self.open_data(Path(path))
 
     def open_out(self):
         d = self.params.out_dir()
