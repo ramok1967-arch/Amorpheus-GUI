@@ -193,6 +193,13 @@ class NormTab(BaseTab):
             for j, x in enumerate(vals):
                 self.table.setItem(i, j, num_item(x, "{:d}" if j == 0 else "{:.3f}" if j < 4 else "{:.4f}"))
 
+    def clear(self):
+        """Wyczysc wyniki (po wczytaniu innych danych / projektu)."""
+        self.res = None
+        self.plot.placeholder(tr("Brak wyników dla bieżących danych"))
+        self.lbl.setText("—")
+        self.table.setRowCount(0)
+
     def default_mod(self):
         if self.res is not None and np.isfinite(self.res.mod_a):
             c = self.res.cn[-1]
@@ -298,6 +305,13 @@ class LoopTab(BaseTab):
 
     def run_buttons(self):
         return [self.b_run]
+
+    def clear(self):
+        """Wyczysc wyniki (po wczytaniu innych danych / projektu)."""
+        self.results = []
+        self.p_used = None
+        self.table.setRowCount(0)
+        self.plot.placeholder(tr("Brak wyników dla bieżących danych"))
 
     def sync_start(self):
         p = self.mw.params.params()
@@ -449,6 +463,12 @@ class Chi2Tab(BaseTab):
 
     def run_buttons(self):
         return [self.b_run]
+
+    def clear(self):
+        """Wyczysc wyniki (po wczytaniu innych danych / projektu)."""
+        self.map = None
+        self.lbl.setText("")
+        self.plot.placeholder(tr("Brak wyników dla bieżących danych"))
 
     def estimate(self):
         n = self.s_nr.value() * self.s_nb.value()

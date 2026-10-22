@@ -351,6 +351,7 @@ EN = {
     "Błąd dopasowania: {0}": "Fit error: {0}",
     "g(r) z funkcją modyfikującą: a = {0:.4f} nm, b = {1:.4f} nm": "g(r) with modification function: a = {0:.4f} nm, b = {1:.4f} nm",
     "Brak danych do wyświetlenia": "No data to display",
+    "Brak wyników dla bieżących danych": "No results for the current data",
 
     # --- panel parametrow ------------------------------------------------------------------------
     "Wybierz plik danych (i tła) – parametry zostaną odczytane z pliku,\na projekt <dane>_Init.txt utworzony obok danych.":

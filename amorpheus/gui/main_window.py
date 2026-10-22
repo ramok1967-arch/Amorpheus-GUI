@@ -290,6 +290,11 @@ class MainWindow(QtWidgets.QMainWindow):
         QtGui.QDesktopServices.openUrl(QtCore.QUrl.fromLocalFile(str(d)))
 
     def _sync_tabs(self):
+        # nowe dane / projekt: stare wyniki nie dotycza juz biezacych danych
+        if self.worker is None or not self.worker.isRunning():
+            for t in (self.t_norm, self.t_rmin, self.t_qmax, self.t_chi):
+                t.clear()
+            self.t_data.show_data()
         p = self.params.params()
         for t in (self.t_rmin, self.t_qmax):
             t.s_rho0.setValue(p.rho)
